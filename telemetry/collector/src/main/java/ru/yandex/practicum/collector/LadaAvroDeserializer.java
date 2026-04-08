@@ -1,4 +1,4 @@
-package ru.practicum.lada;
+package ru.yandex.practicum.collector;
 
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
@@ -7,9 +7,10 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Deserializer;
-import ru.practicum.avro_example.CheckOkEventAvro;
-import ru.practicum.avro_example.ECUCheckEventAvro;
-import ru.practicum.avro_example.LightsEventAvro;
+import ru.yandex.practicum.collector.sensorEvents.SensorEventType;
+import ru.yandex.practicum.kafka.telemetry.event.ClimateSensorAvro;
+import ru.yandex.practicum.kafka.telemetry.event.MotionSensorAvro;
+import ru.yandex.practicum.kafka.telemetry.event.TemperatureSensorAvro;
 
 public class LadaAvroDeserializer implements Deserializer<SpecificRecordBase> {
     private final DecoderFactory decoderFactory = DecoderFactory.get();
@@ -22,14 +23,14 @@ public class LadaAvroDeserializer implements Deserializer<SpecificRecordBase> {
                 DatumReader<SpecificRecordBase> reader;
 
                 switch (topic) {
-                    case LadaTopics.ECU_CHECK_REQUESTS_TOPIC:
-                        reader = new SpecificDatumReader<>(ECUCheckEventAvro.getClassSchema());
+                    case SensorEventType.LIGHT_SENSOR_EVENT:
+                        reader = new SpecificDatumReader<>(ClimateSensorAvro.getClassSchema());
                         break;
-                    case LadaTopics.ECU_CHECK_RESPONSES_TOPIC:
-                        reader = new SpecificDatumReader<>(CheckOkEventAvro.getClassSchema());
+                    case SensorEventType.MOTION_SENSOR_EVENT:
+                        reader = new SpecificDatumReader<>(MotionSensorAvro.getClassSchema());
                         break;
-                    case LadaTopics.LIGHTS_EVENTS_TOPIC:
-                        reader = new SpecificDatumReader<>(LightsEventAvro.getClassSchema());
+                    case SensorEventType.TEMPERATURE_SENSOR_EVENT:
+                        reader = new SpecificDatumReader<>(TemperatureSensorAvro.getClassSchema());
                         break;
                     default:
                         throw new IllegalArgumentException("Неизвестный топик: " + topic);
