@@ -19,4 +19,10 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+
+        </plugins>
+    </build>
+
 </project>
