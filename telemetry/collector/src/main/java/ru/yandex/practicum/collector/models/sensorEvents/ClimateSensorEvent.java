@@ -8,9 +8,9 @@ import lombok.ToString;
 @Setter
 @ToString(callSuper = true)
 public class ClimateSensorEvent extends SensorEvent {
-    private int temperature_c;
+    private int temperatureC;
     private int humidity;
-    private int co2_level;
+    private int co2Level;
 
     @Override
     public SensorEventType getType() {

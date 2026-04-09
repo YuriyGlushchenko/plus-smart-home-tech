@@ -8,8 +8,8 @@ import lombok.ToString;
 @Setter
 @ToString(callSuper = true)
 public class TemperatureSensorEvent extends SensorEvent {
-    private int temperature_c;
-    private int temperature_f;
+    private int temperatureC;
+    private int temperatureF;
 
     @Override
     public SensorEventType getType() {

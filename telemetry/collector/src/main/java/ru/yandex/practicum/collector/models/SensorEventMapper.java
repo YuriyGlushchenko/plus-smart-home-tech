@@ -39,9 +39,9 @@ public class SensorEventMapper {
 
     private static Object createPayload(ClimateSensorEvent event) {
         return ClimateSensorAvro.newBuilder()
-                .setTemperatureC(event.getTemperature_c())
+                .setTemperatureC(event.getTemperatureC())
                 .setHumidity(event.getHumidity())
-                .setCo2Level(event.getCo2_level())
+                .setCo2Level(event.getCo2Level())
                 .build();
     }
 
@@ -53,8 +53,8 @@ public class SensorEventMapper {
 
     private static Object createPayload(TemperatureSensorEvent event) {
         return TemperatureSensorAvro.newBuilder()
-                .setTemperatureC(event.getTemperature_c())
-                .setTemperatureF(event.getTemperature_f())
+                .setTemperatureC(event.getTemperatureC())
+                .setTemperatureF(event.getTemperatureF())
                 .build();
     }
 
