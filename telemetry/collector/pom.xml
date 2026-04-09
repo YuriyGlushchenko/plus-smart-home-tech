@@ -52,7 +52,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>ru.yandex.practicum.collector.CollectorApplication</mainClass>
+                    <mainClass>ru.yandex.practicum.collector.CollectorApp</mainClass>
                 </configuration>
                 <executions>
                     <execution>
