@@ -1,4 +1,4 @@
-package ru.yandex.practicum.collector.sensorEvents;
+package ru.yandex.practicum.collector.models.sensorEvents;
 
 public enum SensorEventType {
     LIGHT_SENSOR_EVENT,

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.collector;
+package ru.yandex.practicum.collector.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -6,13 +6,15 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.collector.sensorEvents.SensorEvent;
+import ru.yandex.practicum.collector.KafkaTopics;
+import ru.yandex.practicum.collector.models.SensorEventMapper;
+import ru.yandex.practicum.collector.models.sensorEvents.SensorEvent;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CollectorServiceImpl implements CollectorService {
+public class SensorEventServiceImpl implements SensorEventService {
 
     private final Producer<String, SpecificRecordBase> producer;
 

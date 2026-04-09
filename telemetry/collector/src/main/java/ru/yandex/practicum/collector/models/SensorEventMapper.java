@@ -1,6 +1,6 @@
-package ru.yandex.practicum.collector;
+package ru.yandex.practicum.collector.models;
 
-import ru.yandex.practicum.collector.sensorEvents.*;
+import ru.yandex.practicum.collector.models.sensorEvents.*;
 import ru.yandex.practicum.kafka.telemetry.event.*;
 
 public class SensorEventMapper {

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.collector;
+package ru.yandex.practicum.collector.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -7,18 +7,19 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import ru.yandex.practicum.collector.sensorEvents.SensorEvent;
+import ru.yandex.practicum.collector.models.hubEvents.HubEvent;
+import ru.yandex.practicum.collector.services.HubEventService;
 
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @Validated
-public class CollectorController {
-    private final CollectorService collectorService;
+public class HubEventController {
+    private final HubEventService hubEventService;
 
-    @PostMapping("/sensors")
-    public void collectSensorEvent(@Valid @RequestBody SensorEvent event) {
-        collectorService.processSensorEvent(event);
+    @PostMapping("/events/hubs")
+    public void collectHubEvent(@Valid @RequestBody HubEvent event) {
+        hubEventService.processHubEvent(event);
     }
 }
