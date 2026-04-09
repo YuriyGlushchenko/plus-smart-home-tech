@@ -1,8 +1,7 @@
 package ru.yandex.practicum.collector.models.hubEvents;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,8 +9,7 @@ import lombok.Setter;
 @Setter
 public class ScenarioRemovedEvent extends HubEvent {
 
-    @Min(3)
-    @Max(2147483647)
+    @Size(min = 3, max = 2147483647)
     @NotBlank
     private String name;
 

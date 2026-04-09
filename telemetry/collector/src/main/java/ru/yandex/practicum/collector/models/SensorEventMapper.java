@@ -18,8 +18,29 @@ public class SensorEventMapper {
                 .setId(event.getId())
                 .setHubId(event.getHubId())
                 .setTimestamp(event.getTimestamp())
-                .setPayload(createPayload(event))  // смотря какой тип SensorEvent, будет вызываться нужная перегрузка createPayload
+                .setPayload(createPayloadByType(event))
                 .build();
+    }
+
+    private static Object createPayloadByType(SensorEvent event) {
+        if (event instanceof LightSensorEvent light) {
+            return createPayload(light);
+        }
+        if (event instanceof MotionSensorEvent motion) {
+            return createPayload(motion);
+        }
+        if (event instanceof ClimateSensorEvent climate) {
+            return createPayload(climate);
+        }
+        if (event instanceof SwitchSensorEvent switchEvent) {
+            return createPayload(switchEvent);
+        }
+        if (event instanceof TemperatureSensorEvent temp) {
+            return createPayload(temp);
+        }
+        throw new IllegalArgumentException(
+                "Unsupported sensor event type: " + event.getClass().getSimpleName()
+        );
     }
 
     private static Object createPayload(LightSensorEvent event) {

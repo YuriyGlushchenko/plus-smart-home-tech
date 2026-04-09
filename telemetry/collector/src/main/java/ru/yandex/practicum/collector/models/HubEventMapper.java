@@ -19,8 +19,26 @@ public class HubEventMapper {
         return HubEventAvro.newBuilder()
                 .setHubId(event.getHubId())
                 .setTimestamp(event.getTimestamp())
-                .setPayload(createPayload(event)) // будут вызываться разные перегрузки в зависимости от типа event в рантайме
+                .setPayload(createPayloadByType(event)) // будут вызываться разные перегрузки в зависимости от типа event
                 .build();
+    }
+
+    private static Object createPayloadByType(HubEvent event) {
+        if (event instanceof DeviceAddedEvent deviceAdded) {
+            return createPayload(deviceAdded);
+        }
+        if (event instanceof DeviceRemovedEvent deviceRemoved) {
+            return createPayload(deviceRemoved);
+        }
+        if (event instanceof ScenarioAddedEvent scenarioAdded) {
+            return createPayload(scenarioAdded);
+        }
+        if (event instanceof ScenarioRemovedEvent scenarioRemoved) {
+            return createPayload(scenarioRemoved);
+        }
+        throw new IllegalArgumentException(
+                "Unsupported hub event type: " + event.getClass().getSimpleName()
+        );
     }
 
     private static Object createPayload(DeviceAddedEvent event) {
@@ -56,12 +74,6 @@ public class HubEventMapper {
         return ScenarioRemovedEventAvro.newBuilder()
                 .setName(event.getName())
                 .build();
-    }
-
-    private static Object createPayload(HubEvent event) {
-        throw new IllegalArgumentException(
-                "Unsupported hub event type: " + event.getClass().getSimpleName()
-        );
     }
 
 

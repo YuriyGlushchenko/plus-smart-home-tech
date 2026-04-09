@@ -20,6 +20,9 @@ public class HubEventController {
 
     @PostMapping("/events/hubs")
     public void collectHubEvent(@Valid @RequestBody HubEvent event) {
+        log.info("Received hub event: type={}, hubId={}", event.getType(), event.getHubId());
+        log.debug("Hub event details: {}", event);
+
         hubEventService.processHubEvent(event);
     }
 }
