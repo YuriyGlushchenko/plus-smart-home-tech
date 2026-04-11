@@ -2,11 +2,8 @@ package ru.yandex.practicum.collector.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.collector.KafkaTopics;
+import ru.yandex.practicum.collector.KafkaEventProducer;
 import ru.yandex.practicum.collector.models.HubEventMapper;
 import ru.yandex.practicum.collector.models.hubEvents.HubEvent;
 import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
@@ -16,21 +13,23 @@ import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
 @Slf4j
 public class HubEventServiceImpl implements HubEventService {
 
-    private final Producer<String, SpecificRecordBase> producer;
+    private final KafkaEventProducer kafkaEventProducer;
 
     @Override
     public void processHubEvent(HubEvent event) {
-        if (event == null) {
-            log.warn("Получен null event");
-            return;
-        }
+
 
         HubEventAvro avroHubEvent = HubEventMapper.toAvro(event);
 
-        ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(KafkaTopics.HUBS_TOPIC,
-                event.getHubId(),
-                avroHubEvent);
-
-        producer.send(record);
+        kafkaEventProducer.sendHubEvent(avroHubEvent)
+                .thenAccept(metadata -> {
+                    log.info("Sensor event sent successfully: hubId={}, offset={}, partition={}",
+                            event.getHubId(), metadata.offset(), metadata.partition());
+                })
+                .exceptionally(exception -> {
+                    log.error("Failed to send sensor event:  hubId={}, type={}",
+                            event.getHubId(), event.getType(), exception);
+                    return null;
+                });
     }
 }
