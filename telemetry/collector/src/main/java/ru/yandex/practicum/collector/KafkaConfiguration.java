@@ -27,10 +27,10 @@ public class KafkaConfiguration {
     @Value("${kafka.topics.hubs}")
     private String hubsTopic;
 
-    @Value("${kafka.producer.key-serializer}")
+    @Value("${kafka.producer.key-serializer:org.apache.kafka.common.serialization.StringSerializer}")
     private String keySerializer;
 
-    @Value("${kafka.producer.value-serializer}")
+    @Value("${kafka.producer.value-serializer:ru.yandex.practicum.collector.EventAvroSerializer}")
     private String valueSerializer;
 
     @Bean

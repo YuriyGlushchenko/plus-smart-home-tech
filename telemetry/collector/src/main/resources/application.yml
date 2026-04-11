@@ -4,5 +4,5 @@ kafka:
     sensors: telemetry.sensors.v1
     hubs: telemetry.hubs.v1
   producer:
-    key.serializer: org.apache.kafka.common.serialization.StringSerializer
-    value.serializer: ru.yandex.practicum.collector.EventAvroSerializer
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: ru.yandex.practicum.collector.EventAvroSerializer
