@@ -1,0 +1,49 @@
+kafka:
+  bootstrap-server: localhost:9092
+
+  topics:
+    snapshots: telemetry.snapshots.v1
+    hubs: telemetry.hubs.v1
+
+  producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: ru.yandex.practicum.analyzer.serialization.AvroSerializer
+
+  consumer:
+    poll-timeout: 1000ms
+    max-poll-records: 100
+    fetch-max-bytes: 3072000
+    max-partition-fetch-bytes: 307200
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+    # Consumer для снапшотов
+    snapshot:
+      group-id: analyzer-snapshot-group
+      client-id: analyzer-snapshot-consumer
+      value-deserializer: ru.yandex.practicum.analyzer.serialization.SensorsSnapshotDeserializer
+
+    # Consumer для событий хаба
+    hub-event:
+      group-id: analyzer-hub-group
+      client-id: analyzer-hub-consumer
+      value-deserializer: ru.yandex.practicum.analyzer.serialization.HubEventDeserializer
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/analyzer_db
+    username: analyzer_user
+    password: analyzer_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: always
