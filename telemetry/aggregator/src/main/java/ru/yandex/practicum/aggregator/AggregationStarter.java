@@ -30,13 +30,11 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class AggregationStarter {
 
+    private static final Map<TopicPartition, OffsetAndMetadata> currentOffsets = new ConcurrentHashMap<>();
     private final KafkaConfiguration kafkaConfig;
     private final Producer<String, SpecificRecordBase> producer;
     private final KafkaConsumer<String, SpecificRecordBase> consumer;
-    private final List<String> topics = List.of(kafkaConfig.getSensorsTopic());
     private final Map<String, SensorsSnapshotAvro> snapShots = new HashMap<>();
-
-    private static final Map<TopicPartition, OffsetAndMetadata> currentOffsets = new ConcurrentHashMap<>();
 
     /**
      * Метод для начала процесса агрегации данных.
@@ -44,6 +42,7 @@ public class AggregationStarter {
      * формирует снимок их состояния и записывает в кафку.
      */
     public void start() {
+        List<String> topics = List.of(kafkaConfig.getSensorsTopic());
 
         Runtime.getRuntime().addShutdownHook(new Thread(consumer::wakeup));
 
