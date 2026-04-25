@@ -6,3 +6,6 @@ kafka:
   producer:
     key-serializer: org.apache.kafka.common.serialization.StringSerializer
     value-serializer: ru.yandex.practicum.collector.EventAvroSerializer
+grpc:
+  server:
+    port: 59091
