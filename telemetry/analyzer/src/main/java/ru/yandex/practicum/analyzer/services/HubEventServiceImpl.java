@@ -33,29 +33,24 @@ public class HubEventServiceImpl implements HubEventService {
         }
     }
 
-//    private void handleScenarioAdded(String hubId, ScenarioAddedEventAvro payload){
-//
-//    }
-
-    private void handleDeviceAdded(String hubId, DeviceAddedEventAvro payload){
+    private void handleDeviceAdded(String hubId, DeviceAddedEventAvro payload) {
 
     }
 
-    private void handleScenarioRemoved(String hubId, ScenarioRemovedEventAvro payload){
+    private void handleScenarioRemoved(String hubId, ScenarioRemovedEventAvro payload) {
 
     }
 
-    private void handleDeviceRemoved(String hubId, DeviceRemovedEventAvro payload){
+    private void handleDeviceRemoved(String hubId, DeviceRemovedEventAvro payload) {
 
     }
 
-    @Override
     @Transactional
     public void handleScenarioAdded(String hubId, ScenarioAddedEventAvro payload) {
         String scenarioName = payload.getName();
         log.info("Processing ScenarioAdded event: hubId={}, name={}", hubId, scenarioName);
 
-        // 1. Создаем сценарий (БД проверит UNIQUE)
+        // Создаем сценарий (hubId + name)
         Scenario scenario = Scenario.builder()
                 .hubId(hubId)
                 .name(scenarioName)
@@ -63,17 +58,18 @@ public class HubEventServiceImpl implements HubEventService {
 
         try {
             scenario = scenarioRepository.save(scenario);
-        } catch (DataIntegrityViolationException e) {
+        } catch (
+                DataIntegrityViolationException e) {  // вместо проверки на дубликат ловим ошибку UNIQUE SQL при дубликате
             log.warn("Scenario '{}/{}' already exists, skipping", hubId, scenarioName);
             return;
         }
 
-        // 2. Создаем условия
+        // Сохраняем условия в табл conditions (type(MOTION..), operation(EQUALS..), value)
         List<Condition> conditions = new ArrayList<>();
         for (ScenarioConditionAvro conditionAvro : payload.getConditions()) {
             conditions.add(Condition.builder()
-                    .type(convertConditionType(conditionAvro.getType()))
-                    .operation(convertConditionOperation(conditionAvro.getOperation()))
+                    .type(ConditionType.fromAvro(conditionAvro.getType()))
+                    .operation(ConditionOperation.fromAvro(conditionAvro.getOperation()))
                     .value(extractIntValue(conditionAvro.getValue()))
                     .build());
         }
@@ -82,11 +78,11 @@ public class HubEventServiceImpl implements HubEventService {
             conditions = conditionRepository.saveAll(conditions);
         }
 
-        // 3. Создаем действия
+        // Сохраняем действия в табл actions ( type(ACTIVATE..), value)
         List<Action> actions = new ArrayList<>();
         for (DeviceActionAvro actionAvro : payload.getActions()) {
             actions.add(Action.builder()
-                    .type(convertActionType(actionAvro.getType()))
+                    .type(ActionType.fromAvro(actionAvro.getType()))
                     .value(extractIntValue(actionAvro.getValue()))
                     .build());
         }
@@ -95,10 +91,11 @@ public class HubEventServiceImpl implements HubEventService {
             actions = actionRepository.saveAll(actions);
         }
 
-        // 4. Пытаемся создать связи - БД проверит FOREIGN KEY и триггеры
+        // создаём связи
         try {
-            // Связи условий
+            // Связи для условий
             List<ScenarioCondition> scenarioConditions = new ArrayList<>();
+
             for (int i = 0; i < conditions.size(); i++) {
                 Condition condition = conditions.get(i);
                 ScenarioConditionAvro conditionAvro = payload.getConditions().get(i);
@@ -120,7 +117,7 @@ public class HubEventServiceImpl implements HubEventService {
                 scenarioConditionRepository.saveAll(scenarioConditions);
             }
 
-            // Связи действий
+            // Связи для действий
             List<ScenarioAction> scenarioActions = new ArrayList<>();
             for (int i = 0; i < actions.size(); i++) {
                 Action action = actions.get(i);
@@ -156,6 +153,17 @@ public class HubEventServiceImpl implements HubEventService {
                 scenarioName, conditions.size(), actions.size());
     }
 
+    private Integer extractIntValue(Object value) {
+        return switch (value) {
+            case null -> null;
+            case Integer i -> i;
+            case Boolean b -> b ? 1 : 0;
+            default -> {
+                log.warn("Unexpected value type: {}", value.getClass().getSimpleName());
+                yield null;
+            }
+        };
+    }
 
 
 }
