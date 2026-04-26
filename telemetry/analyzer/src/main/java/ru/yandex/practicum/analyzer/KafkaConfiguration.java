@@ -33,6 +33,9 @@ public class KafkaConfiguration {
     @Value("${kafka.topics.hubs}")
     private String hubsTopic;
 
+    @Value("${kafka.offsetCommitCount:10}")
+    private int offsetCommitCount;
+
     // Настройки Producer
     @Value("${kafka.producer.key-serializer:org.apache.kafka.common.serialization.StringSerializer}")
     private String keySerializer;
@@ -101,10 +104,10 @@ public class KafkaConfiguration {
         config.put(ConsumerConfig.CLIENT_ID_CONFIG, hubEventClientId);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, hubEventValueDeserializer);
 
-        KafkaConsumer<String, HubEventAvro> consumer = new KafkaConsumer<>(config);
-        consumer.subscribe(List.of(hubsTopic));
+        return new KafkaConsumer<>(config);
+//        consumer.subscribe(List.of(hubsTopic));
 
-        return consumer;
+//        return consumer;
     }
 
     private Properties createBaseConsumerConfig() {

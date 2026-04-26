@@ -5,6 +5,8 @@ kafka:
     snapshots: telemetry.snapshots.v1
     hubs: telemetry.hubs.v1
 
+  offsetCommitCount: 10
+
   producer:
     key-serializer: org.apache.kafka.common.serialization.StringSerializer
     value-serializer: ru.yandex.practicum.analyzer.serialization.AvroSerializer
