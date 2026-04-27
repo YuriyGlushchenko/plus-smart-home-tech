@@ -75,7 +75,7 @@ public class HubEventServiceImpl implements HubEventService {
         }
 
         if (!conditions.isEmpty()) {
-            conditions = conditionRepository.saveAll(conditions);
+            conditions = conditionRepository.saveAll(conditions); // порядок элементов такой же как был изначально в списке payload.getConditions()
         }
 
         // Сохраняем действия в табл actions ( type(ACTIVATE..), value)
@@ -91,25 +91,23 @@ public class HubEventServiceImpl implements HubEventService {
             actions = actionRepository.saveAll(actions);
         }
 
-        // создаём связи
+        // создаём связи вручную из-за составного первичного ключа
         try {
-            // Связи для условий
+            // Связи для условий в табл. scenario-condition(scenario_id, sensor_id, condition_id)
             List<ScenarioCondition> scenarioConditions = new ArrayList<>();
 
             for (int i = 0; i < conditions.size(); i++) {
-                Condition condition = conditions.get(i);
+                Condition condition = conditions.get(i);  // порядок элементов совпадает с изначальным списком условий
                 ScenarioConditionAvro conditionAvro = payload.getConditions().get(i);
 
-                ScenarioConditionId id = new ScenarioConditionId(
+                ScenarioConditionId id = new ScenarioConditionId(  // составной PK для таблицы scenario_conditions
                         scenario.getId(),
                         conditionAvro.getSensorId(),
                         condition.getId()
                 );
 
                 scenarioConditions.add(ScenarioCondition.builder()
-                        .id(id)
-                        .scenario(scenario)
-                        .condition(condition)
+                        .id(id) // из @EmbeddedId поля возьмет поля по аннотациям @MapsId("scenarioId") и т.д.
                         .build());
             }
 
@@ -117,13 +115,13 @@ public class HubEventServiceImpl implements HubEventService {
                 scenarioConditionRepository.saveAll(scenarioConditions);
             }
 
-            // Связи для действий
+            // Связи для действий в табл scenario_actions (scenario_id, sensor_id, action_id)
             List<ScenarioAction> scenarioActions = new ArrayList<>();
             for (int i = 0; i < actions.size(); i++) {
                 Action action = actions.get(i);
                 DeviceActionAvro actionAvro = payload.getActions().get(i);
 
-                ScenarioActionId id = new ScenarioActionId(
+                ScenarioActionId id = new ScenarioActionId( // составной PK для таблицы scenario_actions
                         scenario.getId(),
                         actionAvro.getSensorId(),
                         action.getId()
@@ -131,8 +129,6 @@ public class HubEventServiceImpl implements HubEventService {
 
                 scenarioActions.add(ScenarioAction.builder()
                         .id(id)
-                        .scenario(scenario)
-                        .action(action)
                         .build());
             }
 
