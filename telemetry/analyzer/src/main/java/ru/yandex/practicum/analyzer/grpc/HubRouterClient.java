@@ -16,11 +16,10 @@ import java.time.Instant;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
 public class HubRouterClient {
 
     @GrpcClient("hub-router")
-    private final HubRouterControllerGrpc.HubRouterControllerBlockingStub hubRouterClient;
+    private HubRouterControllerGrpc.HubRouterControllerBlockingStub hubRouterClient;
 
     public DeviceActionRequest createActionRequest(String hubId, String scenarioName,
                                                    ScenarioAction scenarioAction) {
