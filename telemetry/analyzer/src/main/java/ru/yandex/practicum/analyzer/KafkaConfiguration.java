@@ -2,16 +2,11 @@ package ru.yandex.practicum.analyzer;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
 import ru.yandex.practicum.kafka.telemetry.event.SensorsSnapshotAvro;
 
@@ -57,7 +52,6 @@ public class KafkaConfiguration {
     private Integer maxPartitionFetchBytes;
 
 
-
     @Value("${kafka.consumer.snapshot.group-id:analyzer-snapshot-group}")
     private String snapshotGroupId;
 
@@ -68,7 +62,6 @@ public class KafkaConfiguration {
     private String snapshotValueDeserializer;
 
 
-
     @Value("${kafka.consumer.hub-event.group-id:analyzer-hub-group}")
     private String hubEventGroupId;
 
@@ -77,7 +70,6 @@ public class KafkaConfiguration {
 
     @Value("${kafka.consumer.hub-event.value-deserializer:ru.yandex.practicum.analyzer.serialization.HubEventDeserializer}")
     private String hubEventValueDeserializer;
-
 
 
     @Value("${kafka.consumer.key-deserializer:org.apache.kafka.common.serialization.StringDeserializer}")
@@ -105,9 +97,6 @@ public class KafkaConfiguration {
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, hubEventValueDeserializer);
 
         return new KafkaConsumer<>(config);
-//        consumer.subscribe(List.of(hubsTopic));
-
-//        return consumer;
     }
 
     private Properties createBaseConsumerConfig() {

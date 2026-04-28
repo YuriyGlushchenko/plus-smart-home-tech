@@ -2,9 +2,9 @@ package ru.yandex.practicum.analyzer.serialization;
 
 import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
 
-public class HubEventDeserializer extends BaseAvroDeserializer<HubEventAvro>{
+public class HubEventDeserializer extends BaseAvroDeserializer<HubEventAvro> {
 
-    public HubEventDeserializer(){
+    public HubEventDeserializer() {
         super(HubEventAvro.getClassSchema());
     }
 }
