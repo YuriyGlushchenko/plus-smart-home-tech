@@ -233,16 +233,19 @@ public class HubEventServiceImpl implements HubEventService {
     }
 
     private List<Action> saveScenarioActions(List<DeviceActionAvro> actionsAvro) {
+        log.info("Сохраняем {} действий", actionsAvro.size());
         List<Action> actions = new ArrayList<>();
         for (DeviceActionAvro actionAvro : actionsAvro) {
             actions.add(Action.builder()
                     .type(ActionType.fromAvro(actionAvro.getType()))
                     .value(extractIntValue(actionAvro.getValue()))
                     .build());
+            log.info("Действие: type={}, value={}", actionAvro.getType(), extractIntValue(actionAvro.getValue()));
         }
 
         if (!actions.isEmpty()) {
             actions = actionRepository.saveAll(actions);
+            log.info("Сохранено {} действий", actions.size());
         }
         return actions;
     }

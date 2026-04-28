@@ -6,15 +6,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.analyzer.grpc.HubRouterClient;
 import ru.yandex.practicum.analyzer.models.*;
+import ru.yandex.practicum.analyzer.repositories.ScenarioActionRepository;
+import ru.yandex.practicum.analyzer.repositories.ScenarioConditionRepository;
 import ru.yandex.practicum.analyzer.repositories.ScenarioRepository;
 import ru.yandex.practicum.grpc.telemetry.event.DeviceActionRequest;
 import ru.yandex.practicum.kafka.telemetry.event.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -23,6 +23,8 @@ public class SnapshotServiceImpl implements SnapshotService {
 
     private final ScenarioRepository scenarioRepository;
     private final HubRouterClient hubRouterClient;
+    private final ScenarioConditionRepository scenarioConditionRepository;
+    private final ScenarioActionRepository scenarioActionRepository;
 
     private final Map<String, List<Scenario>> hubScenariosCache = new ConcurrentHashMap<>();
 
@@ -75,7 +77,56 @@ public class SnapshotServiceImpl implements SnapshotService {
             return hubScenariosCache.get(hubId);
         }
 
-        List<Scenario> scenarios = scenarioRepository.findByHubIdWithAllRelations(hubId);
+        // 1. Загружаем сценарии
+        List<Scenario> scenarios = scenarioRepository.findByHubId(hubId);
+        log.info("Загружено сценариев: {}", scenarios.size());
+
+        if (scenarios.isEmpty()) {
+            hubScenariosCache.put(hubId, scenarios);
+            return scenarios;
+        }
+
+        // Собираем ID сценариев
+        List<Long> scenarioIds = scenarios.stream()
+                .map(Scenario::getId)
+                .collect(Collectors.toList());
+        log.info("ID сценариев: {}", scenarioIds);
+
+        // 2. Загружаем все условия одним запросом
+        List<ScenarioCondition> allConditions = scenarioConditionRepository.findByScenarioIdsWithFetch(scenarioIds);
+        log.info("Загружено условий: {}", allConditions.size());
+        for (ScenarioCondition sc : allConditions) {
+            log.info("Условие: scenarioId={}, conditionId={}",
+                    sc.getScenario().getId(), sc.getCondition().getId());
+        }
+
+        // 3. Загружаем все действия одним запросом
+        List<ScenarioAction> allActions = scenarioActionRepository.findByScenarioIdsWithFetch(scenarioIds);
+        log.info("Загружено действий: {}", allActions.size());
+        for (ScenarioAction sa : allActions) {
+            log.info("Действие: scenarioId={}, actionId={}, sensorId={}",
+                    sa.getScenario().getId(), sa.getAction().getId(), sa.getSensor().getId());}
+
+        // 4. Группируем по scenarioId
+        Map<Long, List<ScenarioCondition>> conditionsByScenario = allConditions.stream()
+                .collect(Collectors.groupingBy(sc -> sc.getScenario().getId()));
+
+        Map<Long, List<ScenarioAction>> actionsByScenario = allActions.stream()
+                .collect(Collectors.groupingBy(sa -> sa.getScenario().getId()));
+
+        // 5. Собираем в сценарии
+        for (Scenario scenario : scenarios) {
+            scenario.getScenarioConditions().clear();
+            scenario.getScenarioConditions().addAll(
+                    conditionsByScenario.getOrDefault(scenario.getId(), Collections.emptyList())
+            );
+
+            scenario.getScenarioActions().clear();
+            scenario.getScenarioActions().addAll(
+                    actionsByScenario.getOrDefault(scenario.getId(), Collections.emptyList())
+            );
+        }
+
         hubScenariosCache.put(hubId, scenarios);
         return scenarios;
     }

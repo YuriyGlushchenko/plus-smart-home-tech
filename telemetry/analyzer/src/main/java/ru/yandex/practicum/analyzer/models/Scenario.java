@@ -2,6 +2,7 @@ package ru.yandex.practicum.analyzer.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,9 +31,11 @@ public class Scenario {
 
     @OneToMany(mappedBy = "scenario", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private Set<ScenarioCondition> scenarioConditions = new HashSet<>();  // Set вместо List
+    @BatchSize(size = 10)
+    private List<ScenarioCondition> scenarioConditions = new ArrayList<>();
 
     @OneToMany(mappedBy = "scenario", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private Set<ScenarioAction> scenarioActions = new HashSet<>();
+    @BatchSize(size = 10)
+    private List<ScenarioAction> scenarioActions = new ArrayList<>();
 }
