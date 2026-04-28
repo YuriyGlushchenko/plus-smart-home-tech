@@ -3,6 +3,7 @@ package ru.yandex.practicum.analyzer.grpc;
 import io.grpc.StatusRuntimeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.analyzer.models.Action;
 import ru.yandex.practicum.analyzer.models.ActionType;
@@ -18,6 +19,7 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class HubRouterClient {
 
+    @GrpcClient("hub-router")
     private final HubRouterControllerGrpc.HubRouterControllerBlockingStub hubRouterClient;
 
     public DeviceActionRequest createActionRequest(String hubId, String scenarioName,
