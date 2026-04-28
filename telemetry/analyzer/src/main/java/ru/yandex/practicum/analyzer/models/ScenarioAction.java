@@ -5,11 +5,13 @@ import lombok.*;
 
 @Entity
 @Table(name = "scenario_actions")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ScenarioAction {
     @EmbeddedId  // составной ключ из 3 полей
     private ScenarioActionId id;

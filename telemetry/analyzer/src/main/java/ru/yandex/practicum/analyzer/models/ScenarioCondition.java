@@ -5,11 +5,13 @@ import lombok.*;
 
 @Entity
 @Table(name = "scenario_conditions")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ScenarioCondition {
     @EmbeddedId  // составной ключ, внутри 3 поля
     private ScenarioConditionId id;

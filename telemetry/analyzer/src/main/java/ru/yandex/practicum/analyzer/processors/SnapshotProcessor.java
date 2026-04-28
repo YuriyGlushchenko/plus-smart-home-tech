@@ -29,6 +29,7 @@ public class SnapshotProcessor {
 
 
     public void start() {
+        log.info("=== SnapshotProcessor STARTED ===");
         Runtime.getRuntime().addShutdownHook(new Thread(consumer::wakeup));
 
         List<String> topics = List.of(kafkaConfig.getSnapshotsTopic());

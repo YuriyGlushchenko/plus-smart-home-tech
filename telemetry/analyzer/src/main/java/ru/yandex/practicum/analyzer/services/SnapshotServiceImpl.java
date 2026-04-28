@@ -52,6 +52,10 @@ public class SnapshotServiceImpl implements SnapshotService {
         List<DeviceActionRequest> actionsToExecute = new ArrayList<>();
 
         for (Scenario scenario : scenarios) {
+            log.info("Сценарий '{}': условий={}, действий={}",
+                    scenario.getName(),
+                    scenario.getScenarioConditions().size(),
+                    scenario.getScenarioActions().size());
             if (checkScenarioConditions(scenario, sensorValues)) {
                 log.debug("Сценарий '{}' активирован для хаба {}", scenario.getName(), hubId);
                 for (ScenarioAction action : scenario.getScenarioActions()) {

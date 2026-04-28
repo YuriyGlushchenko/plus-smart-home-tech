@@ -4,15 +4,19 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "scenarios", uniqueConstraints = @UniqueConstraint(columnNames = {"hub_id", "name"}))
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Scenario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,9 +30,9 @@ public class Scenario {
 
     @OneToMany(mappedBy = "scenario", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<ScenarioCondition> scenarioConditions = new ArrayList<>();
+    private Set<ScenarioCondition> scenarioConditions = new HashSet<>();  // Set вместо List
 
     @OneToMany(mappedBy = "scenario", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<ScenarioAction> scenarioActions = new ArrayList<>();
+    private Set<ScenarioAction> scenarioActions = new HashSet<>();
 }
