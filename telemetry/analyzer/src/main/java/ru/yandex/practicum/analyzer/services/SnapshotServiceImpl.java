@@ -50,14 +50,9 @@ public class SnapshotServiceImpl implements SnapshotService {
         // Извлекаем значения датчиков из снапшота
         Map<String, Map<String, Object>> sensorValues = extractSensorValues(snapshot);
 
-        // Проверяем условия и собираем действия
+        // Проверяем условия и собираем действия в список
         List<DeviceActionRequest> actionsToExecute = new ArrayList<>();
-
         for (Scenario scenario : scenarios) {
-            log.info("Сценарий '{}': условий={}, действий={}",
-                    scenario.getName(),
-                    scenario.getScenarioConditions().size(),
-                    scenario.getScenarioActions().size());
             if (checkScenarioConditions(scenario, sensorValues)) {
                 log.debug("Сценарий '{}' активирован для хаба {}", scenario.getName(), hubId);
                 for (ScenarioAction action : scenario.getScenarioActions()) {
@@ -77,44 +72,35 @@ public class SnapshotServiceImpl implements SnapshotService {
             return hubScenariosCache.get(hubId);
         }
 
-        // 1. Загружаем сценарии
         List<Scenario> scenarios = scenarioRepository.findByHubId(hubId);
-        log.info("Загружено сценариев: {}", scenarios.size());
+        log.debug("Загружено сценариев: {}", scenarios.size());
 
         if (scenarios.isEmpty()) {
             hubScenariosCache.put(hubId, scenarios);
             return scenarios;
         }
 
-        // Собираем ID сценариев
         List<Long> scenarioIds = scenarios.stream()
                 .map(Scenario::getId)
                 .collect(Collectors.toList());
-        log.info("ID сценариев: {}", scenarioIds);
+        log.debug("ID сценариев: {}", scenarioIds);
 
-        // 2. Загружаем все условия одним запросом
+        // Загружаем все условия одним запросом
         List<ScenarioCondition> allConditions = scenarioConditionRepository.findByScenarioIdsWithFetch(scenarioIds);
-        log.info("Загружено условий: {}", allConditions.size());
-        for (ScenarioCondition sc : allConditions) {
-            log.info("Условие: scenarioId={}, conditionId={}",
-                    sc.getScenario().getId(), sc.getCondition().getId());
-        }
+        log.debug("Загружено условий: {}", allConditions.size());
 
-        // 3. Загружаем все действия одним запросом
+        // Загружаем все действия одним запросом
         List<ScenarioAction> allActions = scenarioActionRepository.findByScenarioIdsWithFetch(scenarioIds);
-        log.info("Загружено действий: {}", allActions.size());
-        for (ScenarioAction sa : allActions) {
-            log.info("Действие: scenarioId={}, actionId={}, sensorId={}",
-                    sa.getScenario().getId(), sa.getAction().getId(), sa.getSensor().getId());}
+        log.debug("Загружено действий: {}", allActions.size());
 
-        // 4. Группируем по scenarioId
+        // Группируем по scenarioId
         Map<Long, List<ScenarioCondition>> conditionsByScenario = allConditions.stream()
                 .collect(Collectors.groupingBy(sc -> sc.getScenario().getId()));
 
         Map<Long, List<ScenarioAction>> actionsByScenario = allActions.stream()
                 .collect(Collectors.groupingBy(sa -> sa.getScenario().getId()));
 
-        // 5. Собираем в сценарии
+        // Собираем всё вместе внутри объекта Scenario
         for (Scenario scenario : scenarios) {
             scenario.getScenarioConditions().clear();
             scenario.getScenarioConditions().addAll(
@@ -127,6 +113,7 @@ public class SnapshotServiceImpl implements SnapshotService {
             );
         }
 
+        // сохраняем в кэш
         hubScenariosCache.put(hubId, scenarios);
         return scenarios;
     }
@@ -253,10 +240,6 @@ public class SnapshotServiceImpl implements SnapshotService {
         };
     }
 
-
-    /**
-     * Обновляет кэш при изменении сценариев
-     */
     public void invalidateCache(String hubId) {
         hubScenariosCache.remove(hubId);
         log.debug("Инвалидирован кэш для хаба {}", hubId);

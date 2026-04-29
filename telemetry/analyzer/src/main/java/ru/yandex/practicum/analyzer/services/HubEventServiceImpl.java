@@ -43,7 +43,7 @@ public class HubEventServiceImpl implements HubEventService {
                 hubId, deviceId, payload.getType());
 
         if (sensorRepository.existsById(deviceId)) {
-            log.info("Датчик '{}' уже существует, пропускаем", deviceId);
+            log.debug("Датчик '{}' уже существует, пропускаем", deviceId);
             return;
         }
 
@@ -53,7 +53,7 @@ public class HubEventServiceImpl implements HubEventService {
                 .build();
 
         sensorRepository.save(sensor);
-        log.info("Датчик '{}' успешно добавлен в хаб '{}'", deviceId, hubId);
+        log.debug("Датчик '{}' успешно добавлен в хаб '{}'", deviceId, hubId);
     }
 
     @Transactional
@@ -71,7 +71,7 @@ public class HubEventServiceImpl implements HubEventService {
         // CascadeType.ALL и orphanRemoval -> все связанные записи в scenario_conditions и scenario_actions удалятся
         scenarioRepository.delete(scenario);
 
-        log.info("Сценарий '{}/{}' успешно удален вместе со всеми условиями и действиями", hubId, scenarioName);
+        log.debug("Сценарий '{}/{}' успешно удален вместе со всеми условиями и действиями", hubId, scenarioName);
 
         snapshotService.invalidateCache(hubId);
     }
@@ -90,13 +90,13 @@ public class HubEventServiceImpl implements HubEventService {
 
         try {
             sensorRepository.delete(sensor);
-            log.info("Датчик '{}/{}' успешно удален", hubId, deviceId);
+            log.debug("Датчик '{}/{}' успешно удален", hubId, deviceId);
             snapshotService.invalidateCache(hubId);
         } catch (DataIntegrityViolationException e) {
             // Нарушение FOREIGN KEY - датчик используется в сценариях
             log.error("Невозможно удалить датчик '{}/{}' - он используется в сценариях", hubId, deviceId);
             throw new IllegalStateException(
-                    String.format("Датчик '%s' используется в сценариях, не может быть удален", deviceId), e
+                    String.format("Датчик '%s' используется в сценариях и не может быть удален", deviceId), e
             );
         }
     }
@@ -106,11 +106,9 @@ public class HubEventServiceImpl implements HubEventService {
         String scenarioName = payload.getName();
         log.info("Обработка ScenarioAdded события: hubId={}, name={}", hubId, scenarioName);
 
-
         // перед тем как что-то делать, проверяем что все сенсоры из сценария существуют
         validateSensors(hubId, payload);
 
-        // Создаем сам сценарий (hubId + name)
         Scenario scenario = Scenario.builder()
                 .hubId(hubId)
                 .name(scenarioName)
@@ -126,7 +124,7 @@ public class HubEventServiceImpl implements HubEventService {
         }
 
         // Сохраняем условия в табл conditions (type(MOTION..), operation(EQUALS..), value)
-        // порядок элементов такой же как был изначально в списке payload.getConditions()
+        // порядок элементов сохраняется такой же, как был изначально в списке payload.getConditions()
         List<Condition> conditions = saveScenarioConditions(payload.getConditions());
 
         // Сохраняем действия в табл actions ( type(ACTIVATE..), value)
@@ -140,20 +138,21 @@ public class HubEventServiceImpl implements HubEventService {
             for (int i = 0; i < conditions.size(); i++) {
                 Condition condition = conditions.get(i);  // порядок элементов совпадает с изначальным списком условий
                 ScenarioConditionAvro conditionAvro = payload.getConditions().get(i);
+                String sensorId = conditionAvro.getSensorId();
 
                 ScenarioConditionId id = new ScenarioConditionId(  // составной PK для таблицы scenario_conditions
                         scenario.getId(),
-                        conditionAvro.getSensorId(),
+                        sensorId,
                         condition.getId()
                 );
 
-                Sensor sensor = sensorRepository.getReferenceById(conditionAvro.getSensorId());
+                Sensor sensor = sensorRepository.getReferenceById(sensorId);
 
                 ScenarioCondition scenarioCondition = ScenarioCondition.builder()
                         .id(id)
-                        .scenario(scenario)      // ⬅️ Добавить
-                        .sensor(sensor)          // ⬅️ Добавить
-                        .condition(condition)    // ⬅️ Добавить
+                        .scenario(scenario)
+                        .sensor(sensor)
+                        .condition(condition)
                         .build();
 
                 scenarioConditions.add(scenarioCondition);
@@ -169,19 +168,21 @@ public class HubEventServiceImpl implements HubEventService {
             for (int i = 0; i < actions.size(); i++) {
                 Action action = actions.get(i);
                 DeviceActionAvro actionAvro = payload.getActions().get(i);
-                Sensor sensor = sensorRepository.getReferenceById(actionAvro.getSensorId());
+                String sensorId = actionAvro.getSensorId();
+
+                Sensor sensor = sensorRepository.getReferenceById(sensorId);
 
                 ScenarioActionId id = new ScenarioActionId( // составной PK для таблицы scenario_actions
                         scenario.getId(),
-                        actionAvro.getSensorId(),
+                        sensorId,
                         action.getId()
                 );
 
                 ScenarioAction scenarioAction = ScenarioAction.builder()
                         .id(id)
-                        .scenario(scenario)  // ⬅️ Добавить
-                        .sensor(sensor)      // ⬅️ Добавить
-                        .action(action)      // ⬅️ Добавить
+                        .scenario(scenario)
+                        .sensor(sensor)
+                        .action(action)
                         .build();
 
                 scenarioActions.add(scenarioAction);
@@ -199,7 +200,7 @@ public class HubEventServiceImpl implements HubEventService {
             throw new IllegalArgumentException("Invalid sensors in scenario: " + e.getMessage(), e);
         }
 
-        log.info("Сценарий '{}' успешно добавлен с {} условиями и {} действиями",
+        log.debug("Сценарий '{}' успешно добавлен с {} условиями и {} действиями",
                 scenarioName, conditions.size(), actions.size());
         snapshotService.invalidateCache(hubId);
     }
@@ -233,19 +234,19 @@ public class HubEventServiceImpl implements HubEventService {
     }
 
     private List<Action> saveScenarioActions(List<DeviceActionAvro> actionsAvro) {
-        log.info("Сохраняем {} действий", actionsAvro.size());
+        log.debug("Сохраняем {} действий", actionsAvro.size());
         List<Action> actions = new ArrayList<>();
         for (DeviceActionAvro actionAvro : actionsAvro) {
             actions.add(Action.builder()
                     .type(ActionType.fromAvro(actionAvro.getType()))
                     .value(extractIntValue(actionAvro.getValue()))
                     .build());
-            log.info("Действие: type={}, value={}", actionAvro.getType(), extractIntValue(actionAvro.getValue()));
+            log.trace("Действие: type={}, value={}", actionAvro.getType(), extractIntValue(actionAvro.getValue()));
         }
 
         if (!actions.isEmpty()) {
             actions = actionRepository.saveAll(actions);
-            log.info("Сохранено {} действий", actions.size());
+            log.debug("Сохранено {} действий", actions.size());
         }
         return actions;
     }
