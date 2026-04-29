@@ -44,9 +44,6 @@ public class HubRouterClient {
                 .build();
     }
 
-    /**
-     * Выполняет действие через gRPC
-     */
     public void executeAction(DeviceActionRequest action) {
         try {
             hubRouterClient.handleDeviceAction(action);
