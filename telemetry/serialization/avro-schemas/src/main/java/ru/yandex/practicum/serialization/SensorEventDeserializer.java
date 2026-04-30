@@ -1,4 +1,4 @@
-package ru.yandex.practicum.aggregator.serialization;
+package ru.yandex.practicum.serialization;
 
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 

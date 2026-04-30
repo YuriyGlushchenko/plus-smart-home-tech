@@ -6,11 +6,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Embeddable
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ScenarioConditionId implements java.io.Serializable {
+public class ScenarioConditionId implements Serializable {
     @Column(name = "scenario_id")
     private Long scenarioId;
 

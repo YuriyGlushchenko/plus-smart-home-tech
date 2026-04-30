@@ -5,12 +5,4 @@ kafka:
     snapshots: telemetry.snapshots.v1
   producer:
     key-serializer: org.apache.kafka.common.serialization.StringSerializer
-    value-serializer: ru.yandex.practicum.aggregator.serialization.AvroSerializer
-  consumer:
-    poll-timeout: 1000ms
-
-    max-poll-records: 100
-    fetch-max-bytes: 3072000
-    max-partition-fetch-bytes: 307200
-    value-deserializer: ru.yandex.practicum.aggregator.serialization.SensorEventDeserializer
-    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-serializer: ru.yandex.practicum.serialization.AvroSerializer

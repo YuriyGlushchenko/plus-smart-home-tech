@@ -9,11 +9,10 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.analyzer.KafkaConfiguration;
+import ru.yandex.practicum.analyzer.config.KafkaProperties;
 import ru.yandex.practicum.analyzer.services.SnapshotService;
 import ru.yandex.practicum.kafka.telemetry.event.SensorsSnapshotAvro;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +21,7 @@ import java.util.Map;
 @Slf4j
 public class SnapshotProcessor {
 
-    private final KafkaConfiguration kafkaConfig;
+    private final KafkaProperties kafkaProps;
     private final KafkaConsumer<String, SensorsSnapshotAvro> consumer;
     private final SnapshotService snapshotService;
 
@@ -30,12 +29,12 @@ public class SnapshotProcessor {
         log.info("=== SnapshotProcessor STARTED ===");
         Runtime.getRuntime().addShutdownHook(new Thread(consumer::wakeup));
 
-        List<String> topics = List.of(kafkaConfig.getSnapshotsTopic());
+        List<String> topics = List.of(kafkaProps.getTopics().getSnapshots());
         consumer.subscribe(topics);
 
         try {
             while (true) {
-                ConsumerRecords<String, SensorsSnapshotAvro> records = consumer.poll(kafkaConfig.getPollTimeout());
+                ConsumerRecords<String, SensorsSnapshotAvro> records = consumer.poll(kafkaProps.getConsumer().getPollTimeout());
 
                 for (ConsumerRecord<String, SensorsSnapshotAvro> record : records) {
                     // Сразу синхронно коммитим offset, по ТЗ "Повторная обработка снапшотов, напротив, крайне нежелательна"

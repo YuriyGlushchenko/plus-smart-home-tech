@@ -12,6 +12,8 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.aggregator.config.KafkaConfiguration;
+import ru.yandex.practicum.aggregator.config.KafkaProperties;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 import ru.yandex.practicum.kafka.telemetry.event.SensorStateAvro;
 import ru.yandex.practicum.kafka.telemetry.event.SensorsSnapshotAvro;
@@ -22,35 +24,25 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Класс AggregationStarter, ответственный за запуск агрегации данных.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class AggregationStarter {
 
     private static final Map<TopicPartition, OffsetAndMetadata> currentOffsets = new ConcurrentHashMap<>();
-    private final KafkaConfiguration kafkaConfig;
+    private final KafkaProperties kafkaProps;
     private final Producer<String, SpecificRecordBase> producer;
     private final KafkaConsumer<String, SpecificRecordBase> consumer;
     private final Map<String, SensorsSnapshotAvro> snapShots = new HashMap<>();
 
-    /**
-     * Метод для начала процесса агрегации данных.
-     * Подписывается на топики для получения событий от датчиков,
-     * формирует снимок их состояния и записывает в кафку.
-     */
     public void start() {
-        List<String> topics = List.of(kafkaConfig.getSensorsTopic());
 
         Runtime.getRuntime().addShutdownHook(new Thread(consumer::wakeup));
 
         try {
-            consumer.subscribe(topics);
 
             while (true) {
-                ConsumerRecords<String, SpecificRecordBase> records = consumer.poll(kafkaConfig.getPollTimeout());
+                ConsumerRecords<String, SpecificRecordBase> records = consumer.poll(kafkaProps.getConsumer().getPollTimeout());
 
                 int count = 0;
                 for (ConsumerRecord<String, SpecificRecordBase> record : records) {
@@ -172,7 +164,7 @@ public class AggregationStarter {
         long timestamp = snapshot.getTimestamp().toEpochMilli();
 
         ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(
-                kafkaConfig.getSnapshotsTopic(),
+                kafkaProps.getTopics().getSnapshots(),
                 null, // опредляем партицию на основе ключа
                 timestamp,
                 key,
