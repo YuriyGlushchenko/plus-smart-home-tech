@@ -15,6 +15,14 @@ spring:
     hibernate:
       ddl-auto: none
     show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: always
 
 grpc:
   client:
