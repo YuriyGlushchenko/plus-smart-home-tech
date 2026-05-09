@@ -7,6 +7,7 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.collector.config.KafkaProps;
 import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 
@@ -18,14 +19,14 @@ import java.util.concurrent.CompletableFuture;
 public class KafkaEventProducer {
 
     private final Producer<String, SpecificRecordBase> producer;
-    private final KafkaConfiguration kafkaConfig;
+    private final KafkaProps kafkaProps;
 
     public CompletableFuture<RecordMetadata> sendSensorEvent(SensorEventAvro avroEvent) {
         String key = avroEvent.getHubId();
         long timestamp = avroEvent.getTimestamp().toEpochMilli();
 
         ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(
-                kafkaConfig.getSensorsTopic(),
+                kafkaProps.getProducer().getSensorsTopic(),
                 null, // опредляем партицию на основе ключа
                 timestamp, // timestamp самого события
                 key,
@@ -40,7 +41,7 @@ public class KafkaEventProducer {
         long timestamp = avroEvent.getTimestamp().toEpochMilli();
 
         ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(
-                kafkaConfig.getHubsTopic(),
+                kafkaProps.getProducer().getHubsTopic(),
                 null,
                 timestamp,
                 key,

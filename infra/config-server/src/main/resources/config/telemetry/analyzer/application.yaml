@@ -1,0 +1,71 @@
+kafka:
+  bootstrap-server: localhost:9092
+
+  producer:
+    properties:
+      bootstrap.servers: ${kafka.bootstrap-server}
+      key.serializer: org.apache.kafka.common.serialization.StringSerializer
+      value.serializer: ru.yandex.practicum.serialization.AvroSerializer
+      linger.ms: 0
+
+  consumer:
+    poll-timeout: 1000ms
+    snapshot:
+      topic: telemetry.snapshots.v1
+      properties:
+        bootstrap.servers: ${kafka.bootstrap-server}
+        group.id: analyzer-snapshot-group
+        client.id: analyzer-snapshot-consumer
+        key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        value.deserializer: ru.yandex.practicum.serialization.SensorsSnapshotDeserializer
+        max.poll.records: 100
+        fetch.max.bytes: 3072000
+        max.partition.fetch.bytes: 307200
+        enable.auto.commit: false
+
+    hub-event:
+      topic: telemetry.hubs.v1
+      offset-commit-count: 5
+      properties:
+        bootstrap.servers: ${kafka.bootstrap-server}
+        group.id: analyzer-hub-group
+        client.id: analyzer-hub-consumer
+        key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        value.deserializer: ru.yandex.practicum.serialization.HubEventDeserializer
+        max.poll.records: 100
+        fetch.max.bytes: 3072000
+        max.partition.fetch.bytes: 307200
+        enable.auto.commit: false
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/analyzer_db
+    username: analyzer_user
+    password: analyzer_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: always
+
+grpc:
+  client:
+    hub-router:
+      address: 'static://localhost:59090'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+
+logging:
+  level:
+    ru.yandex.practicum.analyzer.services: DEBUG
+    ru.yandex.practicum.analyzer.grpc: DEBUG

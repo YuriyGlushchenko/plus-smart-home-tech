@@ -1,11 +1,11 @@
-kafka:
-  bootstrap-server: localhost:9092
-  topics:
-    sensors: telemetry.sensors.v1
-    hubs: telemetry.hubs.v1
-  producer:
-    key-serializer: org.apache.kafka.common.serialization.StringSerializer
-    value-serializer: ru.yandex.practicum.collector.EventAvroSerializer
-grpc:
-  server:
-    port: 59091
+spring:
+  application:
+    name: collector
+  config:
+    import: configserver:http://localhost:8888
+  cloud:
+    config:
+      fail-fast: true # приложение сразу упадет, если сервер конфигураций оказался недоступен
+      retry:
+        useRandomPolicy: true  # для повторных попыток будет использована стратегия random exponential backoff
+        max-interval: 6000 # максимально возможный интервал между попытками подключения.

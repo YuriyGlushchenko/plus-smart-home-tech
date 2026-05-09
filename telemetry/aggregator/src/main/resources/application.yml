@@ -1,25 +1,38 @@
-kafka:
-  bootstrap-server: localhost:9092
+spring:
+  application:
+    name: aggregator
+  config:
+    import: configserver:http://localhost:8888
+  cloud:
+    config:
+      fail-fast: true # приложение сразу упадет, если сервер конфигураций оказался недоступен
+      retry:
+        useRandomPolicy: true  # для повторных попыток будет использована стратегия random exponential backoff
+        max-interval: 6000 # максимально возможный интервал между попытками подключения.
 
-  producer:
-    topic: telemetry.snapshots.v1
-    properties:
-      bootstrap.servers: ${kafka.bootstrap-server}
-      key.serializer: org.apache.kafka.common.serialization.StringSerializer
-      value.serializer: ru.yandex.practicum.serialization.AvroSerializer
-      linger.ms: 0
 
-  consumer:
-    topic: telemetry.sensors.v1
-    poll-timeout: 100ms
-    properties:
-      bootstrap.servers: ${kafka.bootstrap-server}
-      group.id: aggregator-group
-      client.id: aggregator-consumer
-      max.poll.records: 100
-      fetch.max.bytes: 3072000
-      max.partition.fetch.bytes: 307200
-      enable.auto.commit: false
-      auto.offset.reset: earliest
-      key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value.deserializer: ru.yandex.practicum.serialization.SensorEventDeserializer
+#kafka:
+#  bootstrap-server: localhost:9092
+#
+#  producer:
+#    topic: telemetry.snapshots.v1
+#    properties:
+#      bootstrap.servers: ${kafka.bootstrap-server}
+#      key.serializer: org.apache.kafka.common.serialization.StringSerializer
+#      value.serializer: ru.yandex.practicum.serialization.AvroSerializer
+#      linger.ms: 0
+#
+#  consumer:
+#    topic: telemetry.sensors.v1
+#    poll-timeout: 100ms
+#    properties:
+#      bootstrap.servers: ${kafka.bootstrap-server}
+#      group.id: aggregator-group
+#      client.id: aggregator-consumer
+#      max.poll.records: 100
+#      fetch.max.bytes: 3072000
+#      max.partition.fetch.bytes: 307200
+#      enable.auto.commit: false
+#      auto.offset.reset: earliest
+#      key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      value.deserializer: ru.yandex.practicum.serialization.SensorEventDeserializer
