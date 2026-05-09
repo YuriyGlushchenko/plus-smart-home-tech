@@ -1,8 +1,25 @@
 kafka:
   bootstrap-server: localhost:9092
-  topics:
-    sensors: telemetry.sensors.v1
-    snapshots: telemetry.snapshots.v1
+
   producer:
-    key-serializer: org.apache.kafka.common.serialization.StringSerializer
-    value-serializer: ru.yandex.practicum.serialization.AvroSerializer
+    topic: telemetry.snapshots.v1
+    properties:
+      bootstrap.servers: ${kafka.bootstrap-server}
+      key.serializer: org.apache.kafka.common.serialization.StringSerializer
+      value.serializer: ru.yandex.practicum.serialization.AvroSerializer
+      linger.ms: 0
+
+  consumer:
+    topic: telemetry.sensors.v1
+    poll-timeout: 100ms
+    properties:
+      bootstrap.servers: ${kafka.bootstrap-server}
+      group.id: aggregator-group
+      client.id: aggregator-consumer
+      max.poll.records: 100
+      fetch.max.bytes: 3072000
+      max.partition.fetch.bytes: 307200
+      enable.auto.commit: false
+      auto.offset.reset: earliest
+      key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value.deserializer: ru.yandex.practicum.serialization.SensorEventDeserializer

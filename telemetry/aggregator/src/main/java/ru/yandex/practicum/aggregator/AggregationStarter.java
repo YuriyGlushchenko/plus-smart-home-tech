@@ -12,14 +12,12 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.aggregator.config.KafkaConfiguration;
-import ru.yandex.practicum.aggregator.config.KafkaProperties;
+import ru.yandex.practicum.aggregator.config.KafkaProps;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 import ru.yandex.practicum.kafka.telemetry.event.SensorStateAvro;
 import ru.yandex.practicum.kafka.telemetry.event.SensorsSnapshotAvro;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AggregationStarter {
 
     private static final Map<TopicPartition, OffsetAndMetadata> currentOffsets = new ConcurrentHashMap<>();
-    private final KafkaProperties kafkaProps;
+    private final KafkaProps kafkaProps;
     private final Producer<String, SpecificRecordBase> producer;
     private final KafkaConsumer<String, SpecificRecordBase> consumer;
     private final Map<String, SensorsSnapshotAvro> snapShots = new HashMap<>();
@@ -164,7 +162,8 @@ public class AggregationStarter {
         long timestamp = snapshot.getTimestamp().toEpochMilli();
 
         ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(
-                kafkaProps.getTopics().getSnapshots(),
+//                kafkaProps.getTopics().getSnapshots(),
+                kafkaProps.getProducer().getTopic(),
                 null, // опредляем партицию на основе ключа
                 timestamp,
                 key,
