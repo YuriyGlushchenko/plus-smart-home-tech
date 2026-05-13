@@ -103,11 +103,11 @@
                 <artifactId>mapstruct</artifactId>
                 <version>1.5.5.Final</version>
             </dependency>
-            <dependency>
-                <groupId>org.mapstruct</groupId>
-                <artifactId>mapstruct-processor</artifactId>
-                <version>1.5.5.Final</version>
-            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>org.mapstruct</groupId>-->
+<!--                <artifactId>mapstruct-processor</artifactId>-->
+<!--                <version>1.5.5.Final</version>-->
+<!--            </dependency>-->
 
 
 
@@ -126,6 +126,7 @@
                         <source>${java.version}</source>
                         <target>${java.version}</target>
                         <annotationProcessorPaths>
+<!--                            перечисление обработчиков аннотаций (процессоров), которые надо запускать при компиляции-->
                             <path>
                                 <groupId>org.projectlombok</groupId>
                                 <artifactId>lombok</artifactId>
@@ -136,6 +137,7 @@
                                 <artifactId>mapstruct-processor</artifactId>
                                 <version>${mapstruct.version}</version>
                             </path>
+<!--    для совместимости Lombok и MapStruct, чтобы MapStruct видел геттеры/сеттеры сгенерированные Lombok-->
                             <path>
                                 <groupId>org.projectlombok</groupId>
                                 <artifactId>lombok-mapstruct-binding</artifactId>
