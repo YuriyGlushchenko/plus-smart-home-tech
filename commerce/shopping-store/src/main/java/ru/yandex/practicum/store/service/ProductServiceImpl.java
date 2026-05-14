@@ -2,7 +2,7 @@ package ru.yandex.practicum.store.service;
 
 import dto.ProductDto;
 import dto.SetProductQuantityStateRequest;
-import exceptions.exceptions.ProductNotFoundException;
+import ru.yandex.practicum.store.exceptions.exceptions.ProductNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import model.ProductCategory;
@@ -37,7 +37,7 @@ public class ProductServiceImpl implements ProductService {
                 pageable
         );
 
-        return products.map(productMapper::toDto);
+        return products.map(productMapper::toDto);  // map - встроенный метод самого Page<T>, мапит контент страницы
     }
 
     @Override
@@ -45,7 +45,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Получение товара по id: {}", productId);
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException("Товар не найден с id: " + productId));
+                .orElseThrow(() -> new ProductNotFoundException("Товар с id: " + productId + " не найден"));
 
         return productMapper.toDto(product);
     }
@@ -70,9 +70,8 @@ public class ProductServiceImpl implements ProductService {
         log.info("Обновление товара с id: {}", productDto.getProductId());
 
         Product existingProduct = productRepository.findById(productDto.getProductId())
-                .orElseThrow(() -> new ProductNotFoundException("Товар не найден с id: " + productDto.getProductId()));
+                .orElseThrow(() -> new ProductNotFoundException("Товар с id: " + productDto.getProductId() + " не найден"));
 
-        // Обновляем только переданные поля
         if (productDto.getProductName() != null) {
             existingProduct.setProductName(productDto.getProductName());
         }
@@ -96,7 +95,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         Product updatedProduct = productRepository.save(existingProduct);
-        log.info("Товар обновлён с id: {}", updatedProduct.getId());
+        log.info("Обновлён товар с id: {}", updatedProduct.getId());
 
         return productMapper.toDto(updatedProduct);
     }
@@ -104,14 +103,14 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public boolean removeProductFromStore(UUID productId) {
-        log.info("Удаление товара из витрины (деактивация) с id: {}", productId);
+        log.info("Удаление товара (деактивация) с id: {}", productId);
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException("Товар не найден с id: " + productId));
+                .orElseThrow(() -> new ProductNotFoundException("Товар с id: " + productId + " не найден"));
 
         product.setProductState(ProductState.DEACTIVATE);
         productRepository.save(product);
-        log.info("Товар деактивирован с id: {}", productId);
+        log.info("Деактивирован товар с id: {}", productId);
 
         return true;
     }
@@ -123,11 +122,11 @@ public class ProductServiceImpl implements ProductService {
                 request.getProductId(), request.getQuantityState());
 
         Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new ProductNotFoundException("Товар не найден с id: " + request.getProductId()));
+                .orElseThrow(() -> new ProductNotFoundException("Товар с id: " + request.getProductId() + " не найден"));
 
         product.setQuantityState(request.getQuantityState());
         productRepository.save(product);
-        log.info("Статус количества обновлён для товара {}", request.getProductId());
+        log.info("Статус количества обновлён для товара c id {}", request.getProductId());
 
         return true;
     }

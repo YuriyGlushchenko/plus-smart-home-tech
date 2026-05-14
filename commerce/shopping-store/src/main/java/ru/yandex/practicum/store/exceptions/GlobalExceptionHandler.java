@@ -1,8 +1,8 @@
-package exceptions;
+package ru.yandex.practicum.store.exceptions;
 
-import exceptions.exceptions.ProductNotFoundException;
-import exceptions.responses.ErrorResponse;
-import exceptions.responses.ValidationErrorResponse;
+import ru.yandex.practicum.store.exceptions.exceptions.ProductNotFoundException;
+import ru.yandex.practicum.store.exceptions.responses.ErrorResponse;
+import ru.yandex.practicum.store.exceptions.responses.ValidationErrorResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;

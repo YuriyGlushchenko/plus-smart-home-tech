@@ -1,4 +1,4 @@
-package exceptions.responses;
+package ru.yandex.practicum.store.exceptions.responses;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
