@@ -72,27 +72,7 @@ public class ProductServiceImpl implements ProductService {
         Product existingProduct = productRepository.findById(productDto.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException("Товар с id: " + productDto.getProductId() + " не найден"));
 
-        if (productDto.getProductName() != null) {
-            existingProduct.setProductName(productDto.getProductName());
-        }
-        if (productDto.getDescription() != null) {
-            existingProduct.setDescription(productDto.getDescription());
-        }
-        if (productDto.getImageSrc() != null) {
-            existingProduct.setImageSrc(productDto.getImageSrc());
-        }
-        if (productDto.getPrice() != null) {
-            existingProduct.setPrice(productDto.getPrice());
-        }
-        if (productDto.getProductCategory() != null) {
-            existingProduct.setProductCategory(productDto.getProductCategory());
-        }
-        if (productDto.getProductState() != null) {
-            existingProduct.setProductState(productDto.getProductState());
-        }
-        if (productDto.getQuantityState() != null) {
-            existingProduct.setQuantityState(productDto.getQuantityState());
-        }
+        productMapper.updateEntity(productDto, existingProduct);
 
         Product updatedProduct = productRepository.save(existingProduct);
         log.info("Обновлён товар с id: {}", updatedProduct.getId());
