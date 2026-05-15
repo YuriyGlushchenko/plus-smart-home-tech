@@ -40,5 +40,6 @@ public class ShoppingCart {
     @CollectionTable(name = "cart_products", schema = "cart", joinColumns = @JoinColumn(name = "cart_id"))
     @MapKeyColumn(name = "product_id")  // указывает на колонку, которая будет являться ключом в HashMap
     @Column(name = "quantity")  // указывает на колонку, которая будет являться значением в HashMap
+    @Builder.Default
     private Map<UUID, Integer> products = new HashMap<>();
 }
