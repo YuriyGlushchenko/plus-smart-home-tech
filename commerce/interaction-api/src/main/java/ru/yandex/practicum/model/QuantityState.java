@@ -1,4 +1,4 @@
-package model;
+package ru.yandex.practicum.model;
 
 public enum QuantityState {
     ENDED,

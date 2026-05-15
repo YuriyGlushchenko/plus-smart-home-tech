@@ -1,7 +1,7 @@
 package ru.yandex.practicum.cart.controller;
 
-import dto.ChangeProductQuantityRequest;
-import dto.ShoppingCartDto;
+import ru.yandex.practicum.dto.ChangeProductQuantityRequest;
+import ru.yandex.practicum.dto.ShoppingCartDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -1,11 +1,11 @@
-package dto;
+package ru.yandex.practicum.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import model.QuantityState;
+import ru.yandex.practicum.model.QuantityState;
 
 import java.util.UUID;
 

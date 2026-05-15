@@ -1,17 +1,16 @@
-package dto;
+package ru.yandex.practicum.dto;
 
 
-import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import model.ProductCategory;
-import model.ProductState;
-import model.QuantityState;
-import validation.Create;
-import validation.Update;
+import ru.yandex.practicum.model.ProductCategory;
+import ru.yandex.practicum.model.ProductState;
+import ru.yandex.practicum.model.QuantityState;
+import ru.yandex.practicum.validation.Create;
+import ru.yandex.practicum.validation.Update;
 
 
 import java.math.BigDecimal;

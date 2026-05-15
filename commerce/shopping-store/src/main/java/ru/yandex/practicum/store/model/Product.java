@@ -5,9 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import model.ProductCategory;
-import model.ProductState;
-import model.QuantityState;
+import ru.yandex.practicum.model.ProductCategory;
+import ru.yandex.practicum.model.ProductState;
+import ru.yandex.practicum.model.QuantityState;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 

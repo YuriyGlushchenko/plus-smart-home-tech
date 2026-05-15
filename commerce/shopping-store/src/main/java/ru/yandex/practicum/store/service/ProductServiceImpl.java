@@ -1,12 +1,12 @@
 package ru.yandex.practicum.store.service;
 
-import dto.ProductDto;
-import dto.SetProductQuantityStateRequest;
-import ru.yandex.practicum.store.exceptions.exceptions.ProductNotFoundException;
+import ru.yandex.practicum.dto.ProductDto;
+import ru.yandex.practicum.dto.SetProductQuantityStateRequest;
+import ru.yandex.practicum.exceptions.exceptions.ProductNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import model.ProductCategory;
-import model.ProductState;
+import ru.yandex.practicum.model.ProductCategory;
+import ru.yandex.practicum.model.ProductState;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;

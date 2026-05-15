@@ -1,13 +1,13 @@
 package ru.yandex.practicum.cart.service;
 
-import dto.ShoppingCartDto;
+import ru.yandex.practicum.dto.ShoppingCartDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.cart.exception.CartDeactivatedException;
-import ru.yandex.practicum.cart.exception.NoProductsInShoppingCartException;
-import ru.yandex.practicum.cart.exception.NotAuthorizedUserException;
+import ru.yandex.practicum.exceptions.exceptions.CartDeactivatedException;
+import ru.yandex.practicum.exceptions.exceptions.CartNotFoundException;
+import ru.yandex.practicum.exceptions.exceptions.NoProductsInShoppingCartException;
 import ru.yandex.practicum.cart.mapper.ShoppingCartMapper;
 import ru.yandex.practicum.cart.model.CartState;
 import ru.yandex.practicum.cart.model.ShoppingCart;
@@ -29,7 +29,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Override
     public ShoppingCartDto getShoppingCart(String username) {
         log.debug("Получение корзины для пользователя: {}", username);
-        validateUsername(username);
 
         ShoppingCart cart = cartRepository.findByUsername(username)
                 .orElseGet(() -> createNewCart(username));
@@ -41,7 +40,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Transactional
     public ShoppingCartDto addProductToShoppingCart(String username, Map<UUID, Integer> products) {
         log.debug("Добавление товаров в корзину пользователя: {}, товары: {}", username, products);
-        validateUsername(username);
 
         ShoppingCart cart = cartRepository.findByUsername(username)
                 .orElseGet(() -> createNewCart(username));
@@ -72,10 +70,9 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Transactional
     public ShoppingCartDto removeFromShoppingCart(String username, List<UUID> productIds) {
         log.debug("Удаление товаров из корзины пользователя: {}, товары: {}", username, productIds);
-        validateUsername(username);
 
         ShoppingCart cart = cartRepository.findByUsername(username)
-                .orElseThrow(() -> new NoProductsInShoppingCartException("Корзина пользователя " + username + " не найдена"));
+                .orElseThrow(() -> new CartNotFoundException("Корзина пользователя " + username + " не найдена"));
 
         if (cart.getState() == CartState.DEACTIVATE) {
             throw new CartDeactivatedException("Корзина деактивирована. Невозможно удалить товары.");
@@ -106,10 +103,9 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Transactional
     public ShoppingCartDto changeProductQuantity(String username, UUID productId, Long newQuantity) {
         log.debug("Изменение количества товара {} в корзине пользователя {} на {}", productId, username, newQuantity);
-        validateUsername(username);
 
         ShoppingCart cart = cartRepository.findByUsername(username)
-                .orElseThrow(() -> new NoProductsInShoppingCartException("Корзина пользователя " + username + " не найдена"));
+                .orElseThrow(() -> new CartNotFoundException("Корзина пользователя " + username + " не найдена"));
 
         if (cart.getState() == CartState.DEACTIVATE) {
             throw new CartDeactivatedException("Корзина деактивирована. Невозможно изменить количество товаров.");
@@ -136,10 +132,9 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Transactional
     public void deactivateCurrentShoppingCart(String username) {
         log.debug("Деактивация корзины пользователя: {}", username);
-        validateUsername(username);
 
         ShoppingCart cart = cartRepository.findByUsername(username)
-                .orElseThrow(() -> new NoProductsInShoppingCartException("Корзина пользователя " + username + " не найдена"));
+                .orElseThrow(() -> new CartNotFoundException("Корзина пользователя " + username + " не найдена"));
 
         if (cart.getState() == CartState.DEACTIVATE) {
             log.warn("Корзина пользователя {} уже деактивирована", username);
@@ -149,12 +144,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         cart.setState(CartState.DEACTIVATE);
         cartRepository.save(cart);
         log.debug("Корзина пользователя {} деактивирована", username);
-    }
-
-    private void validateUsername(String username) {
-        if (username == null || username.isBlank()) {
-            throw new NotAuthorizedUserException("Имя пользователя не должно быть пустым");
-        }
     }
 
     private ShoppingCart createNewCart(String username) {

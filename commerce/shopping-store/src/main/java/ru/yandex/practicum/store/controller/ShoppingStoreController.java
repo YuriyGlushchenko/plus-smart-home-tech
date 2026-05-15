@@ -1,10 +1,10 @@
 package ru.yandex.practicum.store.controller;
 
-import dto.ProductDto;
-import dto.SetProductQuantityStateRequest;
+import ru.yandex.practicum.dto.ProductDto;
+import ru.yandex.practicum.dto.SetProductQuantityStateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import model.ProductCategory;
+import ru.yandex.practicum.model.ProductCategory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -13,8 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.store.service.ProductService;
-import validation.Create;
-import validation.Update;
+import ru.yandex.practicum.validation.Create;
+import ru.yandex.practicum.validation.Update;
 
 import java.util.UUID;
 

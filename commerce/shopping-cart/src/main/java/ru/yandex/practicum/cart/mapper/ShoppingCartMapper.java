@@ -1,7 +1,7 @@
 package ru.yandex.practicum.cart.mapper;
 
 
-import dto.ShoppingCartDto;
+import ru.yandex.practicum.dto.ShoppingCartDto;
 import org.mapstruct.*;
 import ru.yandex.practicum.cart.model.ShoppingCart;
 

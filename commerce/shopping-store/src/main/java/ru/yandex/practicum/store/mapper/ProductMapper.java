@@ -1,6 +1,6 @@
 package ru.yandex.practicum.store.mapper;
 
-import dto.ProductDto;
+import ru.yandex.practicum.dto.ProductDto;
 import org.mapstruct.*;
 import ru.yandex.practicum.store.model.Product;
 
