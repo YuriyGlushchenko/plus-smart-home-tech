@@ -1,5 +1,7 @@
 package ru.yandex.practicum.cart.service;
 
+import ru.yandex.practicum.cart.client.WarehouseClient;
+import ru.yandex.practicum.dto.BookedProductsDto;
 import ru.yandex.practicum.dto.ShoppingCartDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     private final ShoppingCartRepository cartRepository;
     private final ShoppingCartMapper cartMapper;
+    private final WarehouseClient warehouseClient;
 
     @Override
     public ShoppingCartDto getShoppingCart(String username) {
@@ -46,6 +49,34 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
         if (cart.getState() == CartState.DEACTIVATE) {
             throw new CartDeactivatedException("Корзина деактивирована. Невозможно добавить товары.");
+        }
+
+        // проверка на складе
+        ShoppingCartDto checkRequest = ShoppingCartDto.builder()
+                .shoppingCartId(cart.getId())
+                .products(products)
+                .build();
+
+        try {
+            BookedProductsDto bookedProducts = warehouseClient.checkShoppingCart(checkRequest);
+            log.debug("Проверка склада пройдена. Вес: {}, Объём: {}, Хрупкие: {}",
+                    bookedProducts.getDeliveryWeight(),
+                    bookedProducts.getDeliveryVolume(),
+                    bookedProducts.getFragile());
+        } catch (feign.FeignException e) {
+            if (e.status() == 400) {
+                log.error("Ошибка валидации при проверке склада: {}", e.getMessage());
+                throw new IllegalArgumentException("Неверный запрос к складу");
+            } else if (e.status() == 404) {
+                log.error("Сервис склада не найден: {}", e.getMessage());
+                throw new RuntimeException("Сервис склада временно недоступен");
+            } else {
+                log.error("Ошибка при проверке склада: status={}, message={}", e.status(), e.getMessage());
+                throw new RuntimeException("Ошибка при проверке наличия товаров: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            log.error("Неожиданная ошибка при проверке склада: {}", e.getMessage());
+            throw new RuntimeException("Невозможно проверить наличие товаров");
         }
 
         for (Map.Entry<UUID, Integer> entry : products.entrySet()) {

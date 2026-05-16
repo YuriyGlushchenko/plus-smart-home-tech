@@ -1,5 +1,6 @@
 package ru.yandex.practicum.store.controller;
 
+import ru.yandex.practicum.api.ShoppingStoreApi;
 import ru.yandex.practicum.dto.ProductDto;
 import ru.yandex.practicum.dto.SetProductQuantityStateRequest;
 import jakarta.validation.Valid;
@@ -22,13 +23,14 @@ import java.util.UUID;
 @RequestMapping("/api/v1/shopping-store")
 @RequiredArgsConstructor
 @Validated
-public class ShoppingStoreController {
+public class ShoppingStoreController implements ShoppingStoreApi {
 
     private final ProductService productService;
 
     //   GET /api/v1/shopping-store?category=LIGHTING&page=2&size=5&sort=price,desc&sort=productName,asc
     // спринг сам распарсит параметры и создаст из них pageable ( можно несколько параметров сортировки)
     @GetMapping
+    @Override
     public Page<ProductDto> getProducts(
             @RequestParam ProductCategory category,
             @PageableDefault(size = 20, sort = "productName", direction = Sort.Direction.ASC) Pageable pageable) {
@@ -37,27 +39,32 @@ public class ShoppingStoreController {
     }
 
     @GetMapping("/{productId}")
+    @Override
     public ProductDto getProduct(@PathVariable UUID productId) {
         return productService.getProduct(productId);
     }
 
     @PutMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Override
     public ProductDto createNewProduct(@Validated(Create.class) @RequestBody ProductDto productDto) {
         return productService.createNewProduct(productDto);
     }
 
     @PostMapping
+    @Override
     public ProductDto updateProduct(@Validated(Update.class) @RequestBody ProductDto productDto) {
         return productService.updateProduct(productDto);
     }
 
     @PostMapping("/removeProductFromStore")
+    @Override
     public boolean removeProductFromStore(@RequestBody UUID productId) {
         return productService.removeProductFromStore(productId);
     }
 
     @PostMapping("/quantityState")
+    @Override
     public boolean setProductQuantityState(@Valid @RequestBody SetProductQuantityStateRequest request) {
         return productService.setProductQuantityState(request);
     }
