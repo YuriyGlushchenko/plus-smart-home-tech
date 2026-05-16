@@ -11,14 +11,10 @@ public interface ProductMapper {
     ProductDto toDto(Product product);
 
     @Mapping(target = "id", source = "productId")
-    @Mapping(target = "createdAt", ignore = true) // управляется через @CreationTimestamp в Hibernate, тут игнорится
-    @Mapping(target = "updatedAt", ignore = true) // управляется через @UpdateTimestamp в Hibernate, тут игнорится
     Product toEntity(ProductDto productDto);
 
     // @MappingTarget - указывает, что параметр - это целевой объект, который нужно обновить, а не создавать новый
     @Mapping(target = "id", ignore = true) // ID нельзя менять
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)  // Обновляет только не-null поля
     void updateEntity(ProductDto productDto, @MappingTarget Product product);
 }

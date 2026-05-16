@@ -10,7 +10,5 @@ CREATE TABLE IF NOT EXISTS store.products (
     price DECIMAL(10, 2) NOT NULL,
     quantity_state VARCHAR(20) NOT NULL,
     product_state VARCHAR(20) NOT NULL,
-    product_category VARCHAR(20) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    product_category VARCHAR(20) NOT NULL
 );

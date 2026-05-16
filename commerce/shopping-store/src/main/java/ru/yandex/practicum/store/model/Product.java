@@ -50,12 +50,4 @@ public class Product {
     @Column(name = "product_category", nullable = false)
     @Enumerated(EnumType.STRING)
     private ProductCategory productCategory;
-
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private Instant createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private Instant updatedAt;
 }
