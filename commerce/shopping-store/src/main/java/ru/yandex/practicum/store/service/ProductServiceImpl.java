@@ -56,7 +56,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Создание нового товара: {}", productDto.getProductName());
 
         Product product = productMapper.toEntity(productDto);
-        product.setProductState(ProductState.ACTIVE);
+//        product.setProductState(ProductState.ACTIVE);
 
         Product savedProduct = productRepository.save(product);
         log.info("Товар создан с id: {}", savedProduct.getId());

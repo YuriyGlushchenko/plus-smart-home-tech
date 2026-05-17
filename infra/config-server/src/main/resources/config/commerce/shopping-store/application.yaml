@@ -23,3 +23,8 @@ spring:
       mode: always
       schema-locations: classpath:schema.sql
       continue-on-error: false
+logging:
+  level:
+    ru.yandex.practicum.store: DEBUG
+    org.springframework.web: INFO      # можно DEBUG для деталей запросов
+    org.hibernate.SQL: INFO
