@@ -13,6 +13,14 @@ kafka:
       value.serializer: ru.yandex.practicum.collector.EventAvroSerializer
       linger.ms: 0
 
+#grpc:
+#  server:
+#    port: 59091
+
 grpc:
   server:
-    port: 59091
+    port: ${GRPC_PORT:0}
+
+  client:
+    hub-router:
+      address: 'discovery:///hub-router'
