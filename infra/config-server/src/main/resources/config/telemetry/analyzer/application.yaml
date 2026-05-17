@@ -61,8 +61,6 @@ spring:
       mode: always
 
 grpc:
-  server:
-    port: 59091
   client:
     hub-router:
 #      address: 'discovery:///hub-router'
