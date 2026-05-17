@@ -23,3 +23,22 @@ spring:
       mode: always
       schema-locations: classpath:schema.sql
       continue-on-error: false
+
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+
+resilience4j.circuitbreaker:
+  configs:
+    default:
+      slidingWindowSize: 50
+      failureRateThreshold: 50
+  instances:
+    warehouse:
+      slidingWindowSize: 10
+      waitDurationInOpenState: 10000 # 10 секунд в миллисекундах
+      permittedNumberOfCallsInHalfOpenState: 3
+      slidingWindowType: COUNT_BASED
+      minimumNumberOfCalls: 3
+      automaticTransitionFromOpenToHalfOpenEnabled: true
