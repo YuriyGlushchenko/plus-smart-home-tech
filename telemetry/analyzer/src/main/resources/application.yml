@@ -1,38 +1,19 @@
-kafka:
-  bootstrap-server: localhost:9092
-  topics:
-    snapshots: telemetry.snapshots.v1
-    hubs: telemetry.hubs.v1
-
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/analyzer_db
-    username: analyzer_user
-    password: analyzer_password
-    driver-class-name: org.postgresql.Driver
+  application:
+    name: analyzer
+  config:
+    import: "configserver:"
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        serviceId: config-server
+      fail-fast: true # приложение сразу упадет, если сервер конфигураций оказался недоступен
+      retry:
+        useRandomPolicy: true  # для повторных попыток будет использована стратегия random exponential backoff
+        max-interval: 6000 # максимально возможный интервал между попытками подключения.
 
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: false
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    properties:
-      hibernate:
-        format_sql: true
-
-  sql:
-    init:
-      mode: always
-
-grpc:
+eureka:
   client:
-    hub-router:
-      address: 'static://localhost:59090'
-      enableKeepAlive: true
-      keepAliveWithoutCalls: true
-      negotiationType: plaintext
-
-logging:
-  level:
-    ru.yandex.practicum.analyzer.services: DEBUG
-    ru.yandex.practicum.analyzer.grpc: DEBUG
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname:localhost}:${eureka.instance.port:8761}/eureka/

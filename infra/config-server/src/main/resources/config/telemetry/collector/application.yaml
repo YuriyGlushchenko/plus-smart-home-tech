@@ -1,0 +1,26 @@
+server:
+  port: ${PORT:0}
+
+kafka:
+  bootstrap-server: localhost:9092
+
+  producer:
+    sensors-topic: telemetry.sensors.v1
+    hubs-topic: telemetry.hubs.v1
+    properties:
+      bootstrap.servers: ${kafka.bootstrap-server}
+      key.serializer: org.apache.kafka.common.serialization.StringSerializer
+      value.serializer: ru.yandex.practicum.collector.EventAvroSerializer
+      linger.ms: 0
+
+grpc:
+  server:
+    port: 59091
+
+#grpc:
+#  server:
+#    port: ${GRPC_PORT:0}
+
+  client:
+    hub-router:
+      address: 'discovery:///hub-router'
