@@ -36,11 +36,11 @@ public class WarehouseController implements WarehouseApi {
 
     @Override
     @PostMapping("/check")
-    public BookedProductsDto checkShoppingCart(
+    public BookedProductsDto checkProductQuantityEnoughForShoppingCart(
             @Validated(CheckCart.class) @RequestBody ShoppingCartDto shoppingCart) {
         log.debug("POST /api/v1/warehouse/check - Проверка наличия товаров для корзины: {}",
                 shoppingCart.getShoppingCartId());
-        return warehouseService.checkShoppingCart(shoppingCart);
+        return warehouseService.checkProductQuantityEnoughForShoppingCart(shoppingCart);
     }
 
     @Override

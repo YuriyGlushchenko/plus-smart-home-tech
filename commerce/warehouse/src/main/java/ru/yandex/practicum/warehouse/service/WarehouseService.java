@@ -9,7 +9,7 @@ public interface WarehouseService {
 
     void addProductToWarehouse(AddProductToWarehouseRequest request);
 
-    BookedProductsDto checkShoppingCart(ShoppingCartDto shoppingCart);
+    BookedProductsDto checkProductQuantityEnoughForShoppingCart(ShoppingCartDto shoppingCart);
 
     AddressDto getWarehouseAddress();
 }

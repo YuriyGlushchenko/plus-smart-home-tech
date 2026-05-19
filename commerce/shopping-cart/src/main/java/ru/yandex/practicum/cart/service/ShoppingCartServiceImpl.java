@@ -52,32 +52,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         }
 
         // проверка на складе
-        ShoppingCartDto checkRequest = ShoppingCartDto.builder()
-                .shoppingCartId(cart.getId())
-                .products(products)
-                .build();
-
-        try {
-            BookedProductsDto bookedProducts = warehouseClient.checkShoppingCart(checkRequest);
-            log.debug("Проверка склада пройдена. Вес: {}, Объём: {}, Хрупкие: {}",
-                    bookedProducts.getDeliveryWeight(),
-                    bookedProducts.getDeliveryVolume(),
-                    bookedProducts.getFragile());
-        } catch (feign.FeignException e) {
-            if (e.status() == 400) {
-                log.error("Ошибка валидации при проверке склада: {}", e.getMessage());
-                throw new IllegalArgumentException("Неверный запрос к складу");
-            } else if (e.status() == 404) {
-                log.error("Сервис склада не найден: {}", e.getMessage());
-                throw new RuntimeException("Сервис склада временно недоступен");
-            } else {
-                log.error("Ошибка при проверке склада: status={}, message={}", e.status(), e.getMessage());
-                throw new RuntimeException("Ошибка при проверке наличия товаров: " + e.getMessage());
-            }
-        } catch (Exception e) {
-            log.error("Неожиданная ошибка при проверке склада: {}", e.getMessage());
-            throw new RuntimeException("Невозможно проверить наличие товаров");
-        }
+        checkWarehouse(cart.getId(), products);
 
         for (Map.Entry<UUID, Integer> entry : products.entrySet()) {
             UUID productId = entry.getKey();
@@ -146,6 +121,10 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             throw new NoProductsInShoppingCartException("Товар " + productId + " не найден в корзине пользователя " + username);
         }
 
+        if (newQuantity > 0) {
+            checkWarehouse(cart.getId(), Map.of(productId, newQuantity.intValue()));
+        }
+
         if (newQuantity == 0) {
             cart.getProducts().remove(productId);
             log.debug("Товар {} удалён из корзины", productId);
@@ -184,5 +163,34 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                 .state(CartState.ACTIVE)
                 .build();
         return cartRepository.save(newCart);
+    }
+
+    private void checkWarehouse(UUID cartId, Map<UUID, Integer> products) {
+        ShoppingCartDto checkRequest = ShoppingCartDto.builder()
+                .shoppingCartId(cartId)
+                .products(products)
+                .build();
+
+        try {
+            BookedProductsDto bookedProducts = warehouseClient.checkProductQuantityEnoughForShoppingCart(checkRequest);
+            log.debug("Проверка склада пройдена. Вес: {}, Объём: {}, Хрупкие: {}",
+                    bookedProducts.getDeliveryWeight(),
+                    bookedProducts.getDeliveryVolume(),
+                    bookedProducts.getFragile());
+        } catch (feign.FeignException e) {
+            if (e.status() == 400) {
+                log.error("Ошибка валидации при проверке склада: {}", e.getMessage());
+                throw new IllegalArgumentException("Неверный запрос к складу");
+            } else if (e.status() == 404) {
+                log.error("Сервис склада не найден: {}", e.getMessage());
+                throw new RuntimeException("Сервис склада временно недоступен");
+            } else {
+                log.error("Ошибка при проверке склада: status={}, message={}", e.status(), e.getMessage());
+                throw new RuntimeException("Ошибка при проверке наличия товаров: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            log.error("Неожиданная ошибка при проверке склада: {}", e.getMessage());
+            throw new RuntimeException("Невозможно проверить наличие товаров");
+        }
     }
 }

@@ -78,24 +78,17 @@ public class ShoppingStoreController implements ShoppingStoreApi {
     @Override
     public boolean setProductQuantityState(
             @RequestParam UUID productId,
-            @RequestParam String quantityState) {
+            @RequestParam QuantityState  quantityState) {
 
         log.debug("POST /api/v1/shopping-store/quantityState (query params) - Изменение статуса количества товара: productId={}, quantityState={}",
                 productId, quantityState);
 
         SetProductQuantityStateRequest request = SetProductQuantityStateRequest.builder()
                 .productId(productId)
-                .quantityState(QuantityState.valueOf(quantityState))
+                .quantityState(quantityState)
                 .build();
 
         return productService.setProductQuantityState(request);
     }
 
-//    @PostMapping("/quantityState")
-//    @Override
-//    public boolean setProductQuantityState(@Valid @RequestBody SetProductQuantityStateRequest request) {
-//        log.debug("POST /api/v1/shopping-store/quantityState - Изменение статуса количества товара: productId={}, quantityState={}",
-//                request.getProductId(), request.getQuantityState());
-//        return productService.setProductQuantityState(request);
-//    }
 }

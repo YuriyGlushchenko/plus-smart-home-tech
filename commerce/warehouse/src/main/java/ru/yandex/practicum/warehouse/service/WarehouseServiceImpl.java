@@ -62,7 +62,7 @@ public class WarehouseServiceImpl implements WarehouseService {
     }
 
     @Override
-    public BookedProductsDto checkShoppingCart(ShoppingCartDto shoppingCart) {
+    public BookedProductsDto checkProductQuantityEnoughForShoppingCart(ShoppingCartDto shoppingCart) {
         log.debug("Проверка наличия товаров на складе для корзины: {}", shoppingCart.getShoppingCartId());
 
         List<UUID> productIds = new ArrayList<>(shoppingCart.getProducts().keySet());

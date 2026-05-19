@@ -9,7 +9,7 @@ import ru.yandex.practicum.dto.*;
 public class WarehouseClientFallback implements WarehouseClient {
 
     @Override
-    public BookedProductsDto checkShoppingCart(ShoppingCartDto shoppingCart) {
+    public BookedProductsDto checkProductQuantityEnoughForShoppingCart(ShoppingCartDto shoppingCart) {
         log.warn("Сервис warehouse недоступен. Возвращаем значения по умолчанию для корзины: {}",
                 shoppingCart.getShoppingCartId());
 
