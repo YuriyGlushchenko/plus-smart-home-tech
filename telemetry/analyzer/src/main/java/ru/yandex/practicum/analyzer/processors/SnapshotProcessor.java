@@ -9,7 +9,7 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.analyzer.config.KafkaProperties;
+import ru.yandex.practicum.analyzer.config.KafkaProps;
 import ru.yandex.practicum.analyzer.services.SnapshotService;
 import ru.yandex.practicum.kafka.telemetry.event.SensorsSnapshotAvro;
 
@@ -21,7 +21,7 @@ import java.util.Map;
 @Slf4j
 public class SnapshotProcessor {
 
-    private final KafkaProperties kafkaProps;
+    private final KafkaProps kafkaProps;
     private final KafkaConsumer<String, SensorsSnapshotAvro> consumer;
     private final SnapshotService snapshotService;
 
@@ -29,7 +29,7 @@ public class SnapshotProcessor {
         log.info("=== SnapshotProcessor STARTED ===");
         Runtime.getRuntime().addShutdownHook(new Thread(consumer::wakeup));
 
-        List<String> topics = List.of(kafkaProps.getTopics().getSnapshots());
+        List<String> topics = List.of(kafkaProps.getConsumer().getSnapshot().getTopic());
         consumer.subscribe(topics);
 
         try {

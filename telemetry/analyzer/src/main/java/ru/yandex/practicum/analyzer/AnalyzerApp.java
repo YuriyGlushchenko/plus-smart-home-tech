@@ -3,11 +3,14 @@ package ru.yandex.practicum.analyzer;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ConfigurableApplicationContext;
+import ru.yandex.practicum.analyzer.config.KafkaProps;
 import ru.yandex.practicum.analyzer.processors.HubEventProcessor;
 import ru.yandex.practicum.analyzer.processors.SnapshotProcessor;
 
 @SpringBootApplication
+@EnableConfigurationProperties(KafkaProps.class)
 public class AnalyzerApp {
     public static void main(String[] args) {
         ConfigurableApplicationContext context =

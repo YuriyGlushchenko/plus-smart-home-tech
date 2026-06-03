@@ -9,7 +9,7 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.analyzer.config.KafkaProperties;
+import ru.yandex.practicum.analyzer.config.KafkaProps;
 import ru.yandex.practicum.analyzer.services.HubEventService;
 import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
 
@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class HubEventProcessor implements Runnable {
     private static final Map<TopicPartition, OffsetAndMetadata> currentOffsets = new ConcurrentHashMap<>();
-    private final KafkaProperties kafkaProps;
+    private final KafkaProps kafkaProps;
     private final KafkaConsumer<String, HubEventAvro> consumer;
     private final HubEventService hubEventService;
 
@@ -30,7 +30,8 @@ public class HubEventProcessor implements Runnable {
     public void run() {
         Runtime.getRuntime().addShutdownHook(new Thread(consumer::wakeup));
 
-        List<String> topics = List.of(kafkaProps.getTopics().getHubs());
+//        List<String> topics = List.of(kafkaProps.getTopics().getHubs());
+        List<String> topics = List.of(kafkaProps.getConsumer().getHubEvent().getTopic());
 
         try {
             consumer.subscribe(topics);
@@ -79,7 +80,8 @@ public class HubEventProcessor implements Runnable {
                 new OffsetAndMetadata(record.offset() + 1)
         );
 
-        if (count % kafkaProps.getOffsetCommitCount() == 0) {
+//        if (count % kafkaProps.getOffsetCommitCount() == 0) {
+        if (count % kafkaProps.getConsumer().getHubEvent().getOffsetCommitCount() == 0) {
             consumer.commitAsync(currentOffsets, (offsets, exception) -> {
                 if (exception != null) {
                     log.warn("Ошибка во время фиксации оффсетов: {}", offsets, exception);
