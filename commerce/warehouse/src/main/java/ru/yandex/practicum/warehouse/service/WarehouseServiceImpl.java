@@ -130,19 +130,16 @@ public class WarehouseServiceImpl implements WarehouseService {
     public BookedProductsDto assemblyProductsForOrder(AssemblyProductsForOrderRequest request) {
         log.debug("Сборка товаров для заказа: {}", request.getOrderId());
 
-        // Проверяем, не собирался ли уже этот заказ
         if (orderBookingRepository.findByOrderId(request.getOrderId()).isPresent()) {
             log.warn("Заказ {} уже был собран", request.getOrderId());
             throw new IllegalStateException("Заказ уже был собран");
         }
 
-        // Получаем все товары из запроса
         List<UUID> productIds = new ArrayList<>(request.getProducts().keySet());
 
-        // Получаем информацию о товарах со склада
+        // наличие нужных товаров на складе
         List<WarehouseProduct> warehouseProducts = warehouseRepository.findByProductIdIn(productIds);
-
-        Map<UUID, WarehouseProduct> productMap = warehouseProducts.stream()
+        Map<UUID, WarehouseProduct> warehouseProductMap = warehouseProducts.stream()
                 .collect(Collectors.toMap(WarehouseProduct::getProductId, Function.identity()));
 
         double totalWeight = 0.0;
@@ -150,12 +147,11 @@ public class WarehouseServiceImpl implements WarehouseService {
         boolean hasFragile = false;
         Map<UUID, Integer> bookedProducts = new HashMap<>();
 
-        // Проверяем наличие и резервируем товары
         for (Map.Entry<UUID, Integer> entry : request.getProducts().entrySet()) {
             UUID productId = entry.getKey();
             Integer requestedQuantity = entry.getValue();
 
-            WarehouseProduct product = productMap.get(productId);
+            WarehouseProduct product = warehouseProductMap.get(productId);
             if (product == null) {
                 throw new ProductInShoppingCartLowQuantityInWarehouse(
                         "Товар с id " + productId + " не найден на складе");
@@ -167,11 +163,9 @@ public class WarehouseServiceImpl implements WarehouseService {
                                 "Доступно: " + product.getQuantity() + ", запрошено: " + requestedQuantity);
             }
 
-            // Уменьшаем доступное количество
             product.setQuantity(product.getQuantity() - requestedQuantity);
             warehouseRepository.save(product);
 
-            // Сохраняем информацию о забронированных товарах
             bookedProducts.put(productId, requestedQuantity);
 
             totalWeight += product.getWeight() * requestedQuantity;
@@ -182,7 +176,6 @@ public class WarehouseServiceImpl implements WarehouseService {
             }
         }
 
-        // Создаём запись о бронировании
         OrderBooking booking = OrderBooking.builder()
                 .orderId(request.getOrderId())
                 .products(bookedProducts)
@@ -211,7 +204,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
         if (booking.getDeliveryId() != null) {
             log.warn("Для заказа {} уже указан deliveryId: {}", request.getOrderId(), booking.getDeliveryId());
-            throw new IllegalStateException("Товары уже переданы в доставку");
+//            throw new IllegalStateException("Товары уже переданы в доставку");
         }
 
         booking.setDeliveryId(request.getDeliveryId());
@@ -236,7 +229,7 @@ public class WarehouseServiceImpl implements WarehouseService {
             product.setQuantity(product.getQuantity() + returnQuantity);
             warehouseRepository.save(product);
 
-            log.debug("Возвращён товар {} в количестве {}. Новый остаток: {}",
+            log.trace("Возвращён товар {} в количестве {}. Новый остаток: {}",
                     productId, returnQuantity, product.getQuantity());
         }
 

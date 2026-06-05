@@ -47,7 +47,11 @@ public class WarehouseClientFallback implements WarehouseClient {
     }
 
     @Override
-    public void acceptReturn(Map<UUID, Integer> products) {
+    public void shippedToDelivery(ShippedToDeliveryRequest request) {
 
+    }
+
+    @Override
+    public void acceptReturn(Map<UUID, Integer> products) {
     }
 }
