@@ -20,7 +20,6 @@ import ru.yandex.practicum.payment.repository.PaymentRepository;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -40,22 +39,34 @@ public class PaymentServiceImpl implements PaymentService {
             throw new NotEnoughInfoInOrderToCalculateException("Нет товаров для расчёта стоимости");
         }
 
+        java.util.List<UUID> productIds = new java.util.ArrayList<>(order.getProducts().keySet());
+
+        // добавил эндпоинт в ShoppingStore для получения всех цен одним запросом
+        Map<UUID, Double> productPrices;
+        try {
+            productPrices = shoppingStoreClient.getProductsPrices(productIds);
+            log.trace("Получены цены для {} товаров", productPrices.size());
+        } catch (Exception e) {
+            log.error("Не удалось получить цены товаров: {}", e.getMessage());
+            throw new NotEnoughInfoInOrderToCalculateException(
+                    "Не удалось получить информацию о товарах: " + e.getMessage());
+        }
+
         double totalProductCost = 0.0;
 
         for (Map.Entry<UUID, Integer> entry : order.getProducts().entrySet()) {
             UUID productId = entry.getKey();
             Integer quantity = entry.getValue();
 
-            try {
-                ProductDto product = shoppingStoreClient.getProduct(productId);
-                totalProductCost += product.getPrice().doubleValue() * quantity;
-                log.debug("Товар {}: цена={}, количество={}, сумма={}",
-                        productId, product.getPrice(), quantity, product.getPrice().doubleValue() * quantity);
-            } catch (Exception e) {
-                log.error("Не удалось получить цену товара {}: {}", productId, e.getMessage());
+            Double price = productPrices.get(productId);
+            if (price == null) {
+                log.error("Цена для товара {} не найдена", productId);
                 throw new NotEnoughInfoInOrderToCalculateException(
-                        "Не удалось получить информацию о товаре " + productId);
+                        "Не удалось получить цену для товара " + productId);
             }
+
+            totalProductCost += price * quantity;
+            log.trace("Товар {}: цена={}, количество={}, сумма={}", productId, price, quantity, price * quantity);
         }
 
         log.debug("Общая стоимость товаров для заказа {}: {}", order.getOrderId(), totalProductCost);
@@ -74,15 +85,12 @@ public class PaymentServiceImpl implements PaymentService {
             throw new NotEnoughInfoInOrderToCalculateException("Не указана стоимость доставки");
         }
 
-        // a. НДС = 10% от стоимости товаров
         double vat = order.getProductPrice() * 0.1;
-        log.debug("НДС (10% от стоимости товаров): {}", vat);
+        log.trace("НДС: {}", vat);
 
-        // b. Стоимость товаров с НДС
         double productPriceWithVat = order.getProductPrice() + vat;
-        log.debug("Стоимость товаров с НДС: {}", productPriceWithVat);
+        log.trace("Стоимость товаров с НДС: {}", productPriceWithVat);
 
-        // c. Добавляем стоимость доставки
         double totalCost = productPriceWithVat + order.getDeliveryPrice();
         log.debug("Полная стоимость заказа {}: {}", order.getOrderId(), totalCost);
 
@@ -106,16 +114,13 @@ public class PaymentServiceImpl implements PaymentService {
             throw new NotEnoughInfoInOrderToCalculateException("Не указана общая стоимость");
         }
 
-        // Проверяем, нет ли уже оплаты для этого заказа
         if (paymentRepository.findByOrderId(order.getOrderId()).isPresent()) {
             log.warn("Оплата для заказа {} уже существует", order.getOrderId());
             throw new IllegalStateException("Оплата для этого заказа уже создана");
         }
 
-        // Расчёт НДС (10% от стоимости товаров)
         double vat = order.getProductPrice() * 0.1;
 
-        // Создаём запись об оплате со статусом PENDING
         Payment payment = Payment.builder()
                 .orderId(order.getOrderId())
                 .productPrice(order.getProductPrice())
@@ -128,9 +133,6 @@ public class PaymentServiceImpl implements PaymentService {
         Payment savedPayment = paymentRepository.save(payment);
         log.debug("Создана запись об оплате {} для заказа {} со статусом PENDING",
                 savedPayment.getId(), savedPayment.getOrderId());
-
-        // Эмуляция асинхронного ответа от платёжного шлюза
-        emulatePaymentGateway(savedPayment.getId());
 
         return paymentMapper.toDto(savedPayment);
     }
@@ -145,20 +147,18 @@ public class PaymentServiceImpl implements PaymentService {
 
         if (payment.getStatus() != PaymentStatus.PENDING) {
             log.warn("Платёж {} уже обработан, текущий статус: {}", paymentId, payment.getStatus());
-            throw new IllegalStateException("Платёж уже обработан");
+//            throw new IllegalStateException("Платёж уже обработан");
         }
 
         payment.setStatus(PaymentStatus.SUCCESS);
         paymentRepository.save(payment);
-        log.debug("Статус платежа {} изменён на SUCCESS", paymentId);
+        log.trace("Статус платежа {} изменён на SUCCESS", paymentId);
 
-        // Уведомляем сервис заказов об успешной оплате
         try {
             orderClient.paymentSuccess(payment.getOrderId());
             log.debug("Сервис заказов уведомлён об успешной оплате заказа {}", payment.getOrderId());
         } catch (Exception e) {
             log.error("Не удалось уведомить сервис заказов об успешной оплате: {}", e.getMessage());
-            // Не бросаем исключение, чтобы не откатывать транзакцию
         }
     }
 
@@ -172,48 +172,18 @@ public class PaymentServiceImpl implements PaymentService {
 
         if (payment.getStatus() != PaymentStatus.PENDING) {
             log.warn("Платёж {} уже обработан, текущий статус: {}", paymentId, payment.getStatus());
-            throw new IllegalStateException("Платёж уже обработан");
+//            throw new IllegalStateException("Платёж уже обработан");
         }
 
         payment.setStatus(PaymentStatus.FAILED);
         paymentRepository.save(payment);
-        log.debug("Статус платежа {} изменён на FAILED", paymentId);
+        log.trace("Статус платежа {} изменён на FAILED", paymentId);
 
-        // Уведомляем сервис заказов об ошибке оплаты
         try {
             orderClient.paymentFailed(payment.getOrderId());
             log.debug("Сервис заказов уведомлён об ошибке оплаты заказа {}", payment.getOrderId());
         } catch (Exception e) {
             log.error("Не удалось уведомить сервис заказов об ошибке оплаты: {}", e.getMessage());
         }
-    }
-
-    // ========== Private методы ==========
-
-    private void emulatePaymentGateway(UUID paymentId) {
-        // Эмуляция асинхронного ответа от платёжного шлюза
-        // В реальной системе здесь был бы callback от внешнего сервиса
-        CompletableFuture.runAsync(() -> {
-            try {
-                // Симулируем задержку обработки платежа (1-3 секунды)
-                long delay = 1000 + (long) (Math.random() * 2000);
-                Thread.sleep(delay);
-
-                // 80% успешных платежей, 20% неудачных (для тестирования)
-                boolean success = Math.random() < 0.8;
-
-                log.debug("Эмуляция ответа от платёжного шлюза для платежа {}: {}",
-                        paymentId, success ? "SUCCESS" : "FAILED");
-
-                if (success) {
-                    paymentSuccess(paymentId);
-                } else {
-                    paymentFailed(paymentId);
-                }
-            } catch (InterruptedException e) {
-                log.error("Ошибка при эмуляции платежного шлюза: {}", e.getMessage());
-                Thread.currentThread().interrupt();
-            }
-        });
     }
 }

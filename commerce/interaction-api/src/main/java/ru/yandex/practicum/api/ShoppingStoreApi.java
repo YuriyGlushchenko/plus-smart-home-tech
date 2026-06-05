@@ -14,6 +14,8 @@ import ru.yandex.practicum.model.QuantityState;
 import ru.yandex.practicum.validation.Create;
 import ru.yandex.practicum.validation.Update;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface ShoppingStoreApi {
@@ -38,4 +40,7 @@ public interface ShoppingStoreApi {
     @PostMapping("/api/v1/shopping-store/quantityState")
     boolean setProductQuantityState(@RequestParam UUID productId,
                                     @RequestParam QuantityState quantityState);
+
+    @PostMapping("/api/v1/shopping-store/products/prices")
+    Map<UUID, Double> getProductsPrices(@RequestBody List<UUID> productIds);
 }
