@@ -1,16 +1,16 @@
 package ru.yandex.practicum.store.service;
 
-import ru.yandex.practicum.dto.ProductDto;
-import ru.yandex.practicum.dto.SetProductQuantityStateRequest;
-import ru.yandex.practicum.exceptions.exceptions.ProductNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.model.ProductCategory;
-import ru.yandex.practicum.model.ProductState;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.dto.ProductDto;
+import ru.yandex.practicum.dto.SetProductQuantityStateRequest;
+import ru.yandex.practicum.exceptions.exceptions.ProductNotFoundException;
+import ru.yandex.practicum.model.ProductCategory;
+import ru.yandex.practicum.model.ProductState;
 import ru.yandex.practicum.store.mapper.ProductMapper;
 import ru.yandex.practicum.store.model.Product;
 import ru.yandex.practicum.store.repository.ProductRepository;
@@ -98,8 +98,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public boolean setProductQuantityState(SetProductQuantityStateRequest request) {
-        log.info("Установка статуса количества для товара {} в {}",
-                request.getProductId(), request.getQuantityState());
+        log.info("Установка статуса количества для товара {} в {}", request.getProductId(), request.getQuantityState());
 
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException("Товар с id: " + request.getProductId() + " не найден"));
