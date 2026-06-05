@@ -3,27 +3,17 @@ package ru.yandex.practicum.api;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.dto.AddressDto;
 import ru.yandex.practicum.dto.DeliveryDto;
+import ru.yandex.practicum.dto.OrderDto;
 
 import java.util.UUID;
 
 public interface DeliveryApi {
 
     @PutMapping("/api/v1/delivery")
-    DeliveryDto planDelivery(
-            @RequestParam AddressDto fromAddress,
-            @RequestParam AddressDto toAddress,
-            @RequestParam UUID orderId,
-            @RequestParam Double deliveryWeight,
-            @RequestParam Double deliveryVolume,
-            @RequestParam Boolean fragile);
+    DeliveryDto planDelivery(@RequestBody DeliveryDto deliveryDto);
 
     @PostMapping("/api/v1/delivery/cost")
-    Double deliveryCost(
-            @RequestParam AddressDto fromAddress,
-            @RequestParam AddressDto toAddress,
-            @RequestParam Double weight,
-            @RequestParam Double volume,
-            @RequestParam Boolean fragile);
+    public Double deliveryCost(@RequestBody OrderDto order, @RequestParam AddressDto toAddress);
 
     @PostMapping("/api/v1/delivery/picked")
     void deliveryPicked(@RequestBody UUID orderId);

@@ -8,6 +8,7 @@ import ru.yandex.practicum.api.DeliveryApi;
 import ru.yandex.practicum.delivery.service.DeliveryService;
 import ru.yandex.practicum.dto.AddressDto;
 import ru.yandex.practicum.dto.DeliveryDto;
+import ru.yandex.practicum.dto.OrderDto;
 
 import java.util.UUID;
 
@@ -20,27 +21,18 @@ public class DeliveryController implements DeliveryApi {
     private final DeliveryService deliveryService;
 
     @PutMapping
-    public DeliveryDto planDelivery(
-            @RequestParam AddressDto fromAddress,
-            @RequestParam AddressDto toAddress,
-            @RequestParam UUID orderId,
-            @RequestParam Double deliveryWeight,
-            @RequestParam Double deliveryVolume,
-            @RequestParam Boolean fragile) {
-        log.debug("PUT /api/v1/delivery - Планирование доставки для заказа: {}", orderId);
-        return deliveryService.planDelivery(fromAddress, toAddress, orderId,
-                deliveryWeight, deliveryVolume, fragile);
+    public DeliveryDto planDelivery(@RequestBody DeliveryDto deliveryDto) {
+        log.debug("PUT /api/v1/delivery - Планирование доставки для заказа: {}", deliveryDto.getOrderId());
+        return deliveryService.planDelivery(deliveryDto);
     }
 
     @PostMapping("/cost")
     public Double deliveryCost(
-            @RequestParam AddressDto fromAddress,
-            @RequestParam AddressDto toAddress,
-            @RequestParam Double weight,
-            @RequestParam Double volume,
-            @RequestParam Boolean fragile) {
-        log.debug("POST /api/v1/delivery/cost - Расчёт стоимости доставки");
-        return deliveryService.deliveryCost(fromAddress, toAddress, weight, volume, fragile);
+            @RequestBody OrderDto order,
+            @RequestParam AddressDto toAddress) {
+        log.debug("POST /api/v1/delivery/cost - Расчёт стоимости доставки для заказа: {}, адрес: {}",
+                order.getOrderId(), toAddress.getStreet());
+        return deliveryService.deliveryCost(order, toAddress);
     }
 
     @PostMapping("/picked")

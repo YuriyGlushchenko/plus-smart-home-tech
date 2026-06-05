@@ -3,16 +3,15 @@ package ru.yandex.practicum.delivery.service;
 
 import ru.yandex.practicum.dto.AddressDto;
 import ru.yandex.practicum.dto.DeliveryDto;
+import ru.yandex.practicum.dto.OrderDto;
 
 import java.util.UUID;
 
 public interface DeliveryService {
 
-    DeliveryDto planDelivery(AddressDto fromAddress, AddressDto toAddress, UUID orderId,
-                             Double deliveryWeight, Double deliveryVolume, Boolean fragile);
+    DeliveryDto planDelivery(DeliveryDto deliveryDto);
 
-    Double deliveryCost(AddressDto fromAddress, AddressDto toAddress,
-                        Double weight, Double volume, Boolean fragile);
+    Double deliveryCost(OrderDto orderDto, AddressDto toAddress);
 
     void deliveryPicked(UUID orderId);
 

@@ -12,6 +12,7 @@ import ru.yandex.practicum.delivery.model.DeliveryState;
 import ru.yandex.practicum.delivery.repository.DeliveryRepository;
 import ru.yandex.practicum.dto.AddressDto;
 import ru.yandex.practicum.dto.DeliveryDto;
+import ru.yandex.practicum.dto.OrderDto;
 import ru.yandex.practicum.dto.ShippedToDeliveryRequest;
 import ru.yandex.practicum.exceptions.exceptions.NoDeliveryFoundException;
 
@@ -30,36 +31,41 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     @Transactional
-    public DeliveryDto planDelivery(AddressDto fromAddress, AddressDto toAddress, UUID orderId,
-                                    Double deliveryWeight, Double deliveryVolume, Boolean fragile) {
-        log.debug("Создание доставки для заказа: {}", orderId);
+    public DeliveryDto planDelivery(DeliveryDto deliveryDto) {
+        log.debug("Создание доставки для заказа: {}", deliveryDto.getOrderId());
 
-        if (deliveryRepository.findByOrderId(orderId).isPresent()) {
-            log.warn("Доставка для заказа {} уже существует", orderId);
+        if (deliveryRepository.findByOrderId(deliveryDto.getOrderId()).isPresent()) {
+            log.warn("Доставка для заказа {} уже существует", deliveryDto.getOrderId());
             throw new IllegalStateException("Доставка для этого заказа уже создана");
         }
 
         Delivery delivery = Delivery.builder()
-                .orderId(orderId)
-                .fromAddress(deliveryMapper.toAddress(fromAddress))
-                .toAddress(deliveryMapper.toAddress(toAddress))
-                .deliveryWeight(deliveryWeight)
-                .deliveryVolume(deliveryVolume)
-                .fragile(fragile)
+                .orderId(deliveryDto.getOrderId())
+                .fromAddress(deliveryMapper.toAddress(deliveryDto.getFromAddress()))
+                .toAddress(deliveryMapper.toAddress(deliveryDto.getToAddress()))
+                .deliveryWeight(deliveryDto.getDeliveryWeight())
+                .deliveryVolume(deliveryDto.getDeliveryVolume())
+                .fragile(deliveryDto.getFragile())
                 .state(DeliveryState.CREATED)
                 .build();
 
         Delivery savedDelivery = deliveryRepository.save(delivery);
-        log.debug("Доставка создана с id: {} для заказа: {}", savedDelivery.getId(), orderId);
+        log.debug("Доставка создана с id: {} для заказа: {}", savedDelivery.getId(), deliveryDto.getOrderId());
 
         return deliveryMapper.toDto(savedDelivery);
     }
 
     @Override
-    public Double deliveryCost(AddressDto fromAddress, AddressDto toAddress,
-                               Double weight, Double volume, Boolean fragile) {
+    public Double deliveryCost(OrderDto orderDto, AddressDto toAddress) {
         log.debug("Расчёт стоимости доставки: from={}, to={}, weight={}, volume={}, fragile={}",
-                fromAddress.getStreet(), toAddress.getStreet(), weight, volume, fragile);
+                warehouseClient.getWarehouseAddress().getStreet(),
+                toAddress.getStreet(),
+                orderDto.getDeliveryWeight(),
+                orderDto.getDeliveryVolume(),
+                orderDto.getFragile());
+
+        // Получаем адрес склада
+        AddressDto fromAddress = warehouseClient.getWarehouseAddress();
 
         double cost = 5.0;
 
@@ -69,21 +75,25 @@ public class DeliveryServiceImpl implements DeliveryService {
         log.trace("После учёта адреса склада (множитель {}): {}", addressMultiplier, cost);
 
         // коэфф. хрупкости
-        if (fragile != null && fragile) {
+        if (orderDto.getFragile() != null && orderDto.getFragile()) {
             double fragileAddition = cost * 0.2;
             cost = cost + fragileAddition;
             log.trace("После учёта хрупкости (+{}): {}", fragileAddition, cost);
         }
 
         // коэффициент веса
-        double weightAddition = weight * 0.3;
-        cost = cost + weightAddition;
-        log.trace("После учёта веса (+{}): {}", weightAddition, cost);
+        if (orderDto.getDeliveryWeight() != null) {
+            double weightAddition = orderDto.getDeliveryWeight() * 0.3;
+            cost = cost + weightAddition;
+            log.trace("После учёта веса (+{}): {}", weightAddition, cost);
+        }
 
         // коэффициент объема
-        double volumeAddition = volume * 0.2;
-        cost = cost + volumeAddition;
-        log.trace("После учёта объёма (+{}): {}", volumeAddition, cost);
+        if (orderDto.getDeliveryVolume() != null) {
+            double volumeAddition = orderDto.getDeliveryVolume() * 0.2;
+            cost = cost + volumeAddition;
+            log.trace("После учёта объёма (+{}): {}", volumeAddition, cost);
+        }
 
         // коэффициент совпадения адреса
         if (!isSameStreet(fromAddress, toAddress)) {

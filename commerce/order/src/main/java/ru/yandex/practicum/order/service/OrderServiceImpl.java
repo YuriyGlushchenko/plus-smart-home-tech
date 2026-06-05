@@ -71,8 +71,8 @@ public class OrderServiceImpl implements OrderService {
         Order order = findOrderById(orderId);
 
         AddressDto warehouseAddress = warehouseClient.getWarehouseAddress();
+        log.debug("Адрес склада: {}", warehouseAddress.getStreet());
 
-        // Получаем адрес доставки из заказа
         AddressDto deliveryAddress = AddressDto.builder()
                 .country(order.getDeliveryAddress().getCountry())
                 .city(order.getDeliveryAddress().getCity())
@@ -80,18 +80,16 @@ public class OrderServiceImpl implements OrderService {
                 .house(order.getDeliveryAddress().getHouse())
                 .flat(order.getDeliveryAddress().getFlat())
                 .build();
+        log.debug("Адрес доставки: {}", deliveryAddress.getStreet());
 
-        // Запрашиваем стоимость доставки из delivery сервиса
-        Double deliveryCost = deliveryClient.deliveryCost(
-                warehouseAddress,
-                deliveryAddress,
-                order.getDeliveryWeight(),
-                order.getDeliveryVolume(),
-                order.getFragile());
+        OrderDto orderDto = orderMapper.toDto(order);
+        Double deliveryCost = deliveryClient.deliveryCost(orderDto, deliveryAddress);
+        log.debug("Рассчитанная стоимость доставки: {}", deliveryCost);
 
         order.setDeliveryPrice(deliveryCost);
 
         Order savedOrder = orderRepository.save(order);
+        log.debug("Стоимость доставки для заказа {} сохранена: {}", orderId, deliveryCost);
 
         return orderMapper.toDto(savedOrder);
     }
