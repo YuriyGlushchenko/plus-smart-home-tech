@@ -28,7 +28,6 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
-    private final ShoppingCartClient shoppingCartClient;
     private final WarehouseClient warehouseClient;
     private final PaymentClient paymentClient;
     private final DeliveryClient deliveryClient;
@@ -46,13 +45,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderDto createNewOrder(String username, CreateNewOrderRequest request) {
-        log.debug("Создание нового заказа для пользователя: {}", username);
-        validateUsername(username);
+    public OrderDto createNewOrder(CreateNewOrderRequest request) {
+        log.debug("Создание нового заказа из корзины: {}", request.getShoppingCart().getShoppingCartId());
 
         BookedProductsDto booked = checkWarehouse(request.getShoppingCart());
 
-        Order order = orderMapper.toEntity(request, username);
+        Order order = orderMapper.toEntity(request);
         order.setDeliveryWeight(booked.getDeliveryWeight());
         order.setDeliveryVolume(booked.getDeliveryVolume());
         order.setFragile(booked.getFragile());

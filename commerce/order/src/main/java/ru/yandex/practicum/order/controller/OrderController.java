@@ -32,8 +32,7 @@ public class OrderController implements OrderApi {
     @ResponseStatus(HttpStatus.CREATED)
     public OrderDto createNewOrder(@Valid @RequestBody CreateNewOrderRequest request) {
         log.debug("PUT /api/v1/order - Создание нового заказа");
-        String username = extractUsername(); // TODO: получать из security context
-        return orderService.createNewOrder(username, request);
+        return orderService.createNewOrder(request);
     }
 
     @PostMapping("/return")
@@ -102,9 +101,4 @@ public class OrderController implements OrderApi {
         return orderService.assemblyFailed(orderId);
     }
 
-    // Временный метод для получения username
-    private String extractUsername() {
-        // TODO: получить из Spring Security
-        return "temp_user@example.com";
-    }
 }

@@ -28,7 +28,7 @@ public interface OrderMapper {
     @Mapping(target = "productPrice", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    Order toEntity(CreateNewOrderRequest request, String username);
+    Order toEntity(CreateNewOrderRequest request);
 
     @Mapping(source = "id", target = "orderId")
     OrderDto toDto(Order order);

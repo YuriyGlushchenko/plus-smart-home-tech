@@ -1,8 +1,10 @@
 package ru.yandex.practicum.delivery.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.api.DeliveryApi;
 import ru.yandex.practicum.delivery.service.DeliveryService;
@@ -16,19 +18,20 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/delivery")
 @RequiredArgsConstructor
+@Validated
 public class DeliveryController implements DeliveryApi {
 
     private final DeliveryService deliveryService;
 
     @PutMapping
-    public DeliveryDto planDelivery(@RequestBody DeliveryDto deliveryDto) {
+    public DeliveryDto planDelivery(@Valid @RequestBody DeliveryDto deliveryDto) {
         log.debug("PUT /api/v1/delivery - Планирование доставки для заказа: {}", deliveryDto.getOrderId());
         return deliveryService.planDelivery(deliveryDto);
     }
 
     @PostMapping("/cost")
     public Double deliveryCost(
-            @RequestBody OrderDto order,
+            @Valid @RequestBody OrderDto order,
             @RequestParam AddressDto toAddress) {
         log.debug("POST /api/v1/delivery/cost - Расчёт стоимости доставки для заказа: {}, адрес: {}",
                 order.getOrderId(), toAddress.getStreet());
@@ -36,19 +39,19 @@ public class DeliveryController implements DeliveryApi {
     }
 
     @PostMapping("/picked")
-    public void deliveryPicked(@RequestBody UUID orderId) {
+    public void deliveryPicked(@NotNull @RequestBody UUID orderId) {
         log.debug("POST /api/v1/delivery/picked - Приём товаров в доставку для заказа: {}", orderId);
         deliveryService.deliveryPicked(orderId);
     }
 
     @PostMapping("/successful")
-    public void deliverySuccessful(@RequestBody UUID orderId) {
+    public void deliverySuccessful(@NotNull @RequestBody UUID orderId) {
         log.debug("POST /api/v1/delivery/successful - Успешная доставка для заказа: {}", orderId);
         deliveryService.deliverySuccessful(orderId);
     }
 
     @PostMapping("/failed")
-    public void deliveryFailed(@RequestBody UUID orderId) {
+    public void deliveryFailed(@NotNull @RequestBody UUID orderId) {
         log.debug("POST /api/v1/delivery/failed - Ошибка доставки для заказа: {}", orderId);
         deliveryService.deliveryFailed(orderId);
     }
