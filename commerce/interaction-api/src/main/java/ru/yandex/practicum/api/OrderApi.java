@@ -1,5 +1,6 @@
 package ru.yandex.practicum.api;
 
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.dto.CreateNewOrderRequest;
 import ru.yandex.practicum.dto.OrderDto;
@@ -11,7 +12,7 @@ import java.util.UUID;
 public interface OrderApi {
 
     @GetMapping("/api/v1/order")
-    List<OrderDto> getClientOrders(@RequestParam String username);
+    List<OrderDto> getClientOrders(@RequestParam @NotBlank(message = "Имя пользователя не может быть пустым") String username);
 
     @PutMapping("/api/v1/order")
     OrderDto createNewOrder(@RequestBody CreateNewOrderRequest request);

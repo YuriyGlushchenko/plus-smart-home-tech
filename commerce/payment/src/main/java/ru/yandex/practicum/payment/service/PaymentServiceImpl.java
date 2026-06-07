@@ -6,20 +6,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.dto.OrderDto;
 import ru.yandex.practicum.dto.PaymentDto;
-import ru.yandex.practicum.dto.ProductDto;
 import ru.yandex.practicum.exceptions.exceptions.NoOrderFoundException;
 import ru.yandex.practicum.exceptions.exceptions.NotEnoughInfoInOrderToCalculateException;
 import ru.yandex.practicum.payment.client.OrderClient;
 import ru.yandex.practicum.payment.client.ShoppingStoreClient;
-
 import ru.yandex.practicum.payment.mapper.PaymentMapper;
 import ru.yandex.practicum.payment.model.Payment;
 import ru.yandex.practicum.payment.model.PaymentStatus;
 import ru.yandex.practicum.payment.repository.PaymentRepository;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -39,7 +38,7 @@ public class PaymentServiceImpl implements PaymentService {
             throw new NotEnoughInfoInOrderToCalculateException("Нет товаров для расчёта стоимости");
         }
 
-        java.util.List<UUID> productIds = new java.util.ArrayList<>(order.getProducts().keySet());
+        List<UUID> productIds = new java.util.ArrayList<>(order.getProducts().keySet());
 
         // добавил эндпоинт в ShoppingStore для получения всех цен одним запросом
         Map<UUID, Double> productPrices;

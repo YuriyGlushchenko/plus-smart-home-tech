@@ -1,9 +1,11 @@
 package ru.yandex.practicum.order.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.api.OrderApi;
 import ru.yandex.practicum.dto.CreateNewOrderRequest;
@@ -18,12 +20,13 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/order")
 @RequiredArgsConstructor
+@Validated
 public class OrderController implements OrderApi {
 
     private final OrderService orderService;
 
     @GetMapping
-    public List<OrderDto> getClientOrders(@RequestParam String username) {
+    public List<OrderDto> getClientOrders(@RequestParam @NotBlank(message = "Имя пользователя не может быть пустым") String username) {
         log.debug("GET /api/v1/order - Получение заказов пользователя: {}", username);
         return orderService.getClientOrders(username);
     }

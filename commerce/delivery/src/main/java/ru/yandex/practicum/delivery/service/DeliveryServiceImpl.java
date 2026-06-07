@@ -16,6 +16,7 @@ import ru.yandex.practicum.dto.OrderDto;
 import ru.yandex.practicum.dto.ShippedToDeliveryRequest;
 import ru.yandex.practicum.exceptions.exceptions.NoDeliveryFoundException;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
@@ -67,43 +68,46 @@ public class DeliveryServiceImpl implements DeliveryService {
         // Получаем адрес склада
         AddressDto fromAddress = warehouseClient.getWarehouseAddress();
 
-        double cost = 5.0;
+        BigDecimal cost = BigDecimal.valueOf(5.0);
 
         // коэффициент склада
-        double addressMultiplier = getAddressMultiplier(fromAddress);
-        cost = cost + (cost * addressMultiplier);
+        BigDecimal addressMultiplier = getAddressMultiplier(fromAddress);
+        cost = cost.add(cost.multiply(addressMultiplier));
         log.trace("После учёта адреса склада (множитель {}): {}", addressMultiplier, cost);
 
         // коэфф. хрупкости
         if (orderDto.getFragile() != null && orderDto.getFragile()) {
-            double fragileAddition = cost * 0.2;
-            cost = cost + fragileAddition;
+            BigDecimal fragileAddition = cost.multiply(BigDecimal.valueOf(0.2));
+            cost = cost.add(fragileAddition);
             log.trace("После учёта хрупкости (+{}): {}", fragileAddition, cost);
         }
 
         // коэффициент веса
         if (orderDto.getDeliveryWeight() != null) {
-            double weightAddition = orderDto.getDeliveryWeight() * 0.3;
-            cost = cost + weightAddition;
+            BigDecimal weightAddition = BigDecimal.valueOf(orderDto.getDeliveryWeight())
+                    .multiply(BigDecimal.valueOf(0.3));
+            cost = cost.add(weightAddition);
             log.trace("После учёта веса (+{}): {}", weightAddition, cost);
         }
 
         // коэффициент объема
         if (orderDto.getDeliveryVolume() != null) {
-            double volumeAddition = orderDto.getDeliveryVolume() * 0.2;
-            cost = cost + volumeAddition;
+            BigDecimal volumeAddition = BigDecimal.valueOf(orderDto.getDeliveryVolume())
+                    .multiply(BigDecimal.valueOf(0.2));
+            cost = cost.add(volumeAddition);
             log.trace("После учёта объёма (+{}): {}", volumeAddition, cost);
         }
 
         // коэффициент совпадения адреса
         if (!isSameStreet(fromAddress, toAddress)) {
-            double streetAddition = cost * 0.2;
-            cost = cost + streetAddition;
+            BigDecimal streetAddition = cost.multiply(BigDecimal.valueOf(0.2));
+            cost = cost.add(streetAddition);
             log.trace("После учёта адреса доставки (улица не совпадает, +{}): {}", streetAddition, cost);
         }
 
-        log.debug("Итоговая стоимость доставки: {}", cost);
-        return cost;
+        double result = cost.doubleValue();
+        log.debug("Итоговая стоимость доставки: {}", result);
+        return result;
     }
 
     @Override
@@ -116,7 +120,6 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         if (delivery.getState() != DeliveryState.CREATED) {
             log.warn("Доставка для заказа {} не в статусе CREATED, текущий статус: {}", orderId, delivery.getState());
-//            throw new IllegalStateException("Доставка не может быть начата в текущем статусе");
         }
 
         delivery.setState(DeliveryState.IN_PROGRESS);
@@ -152,7 +155,6 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         if (delivery.getState() != DeliveryState.IN_PROGRESS) {
             log.warn("Доставка для заказа {} не в статусе IN_PROGRESS, текущий статус: {}", orderId, delivery.getState());
-//            throw new IllegalStateException("Доставка не может быть завершена в текущем статусе");
         }
 
         delivery.setState(DeliveryState.DELIVERED);
@@ -177,7 +179,6 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         if (delivery.getState() != DeliveryState.IN_PROGRESS) {
             log.warn("Доставка для заказа {} не в статусе IN_PROGRESS, текущий статус: {}", orderId, delivery.getState());
-//            throw new IllegalStateException("Доставка не может быть завершена с ошибкой в текущем статусе");
         }
 
         delivery.setState(DeliveryState.FAILED);
@@ -192,14 +193,11 @@ public class DeliveryServiceImpl implements DeliveryService {
         }
     }
 
-    private double getAddressMultiplier(AddressDto address) {
+    private BigDecimal getAddressMultiplier(AddressDto address) {
         if (address == null || address.getStreet() == null) {
-            return 1.0;
+            return BigDecimal.ONE;
         }
-        if (address.getStreet().contains("ADDRESS_2")) {
-            return 2.0;
-        }
-        return 1.0;
+        return address.getStreet().contains("ADDRESS_2") ? BigDecimal.valueOf(2.0) : BigDecimal.ONE;
     }
 
     private boolean isSameStreet(AddressDto fromAddress, AddressDto toAddress) {

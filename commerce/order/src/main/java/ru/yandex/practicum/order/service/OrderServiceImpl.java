@@ -9,7 +9,6 @@ import ru.yandex.practicum.exceptions.exceptions.NoOrderFoundException;
 import ru.yandex.practicum.exceptions.exceptions.NotAuthorizedUserException;
 import ru.yandex.practicum.order.client.DeliveryClient;
 import ru.yandex.practicum.order.client.PaymentClient;
-import ru.yandex.practicum.order.client.ShoppingCartClient;
 import ru.yandex.practicum.order.client.WarehouseClient;
 import ru.yandex.practicum.order.mapper.OrderMapper;
 import ru.yandex.practicum.order.model.Order;
@@ -35,7 +34,6 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderDto> getClientOrders(String username) {
         log.debug("Получение заказов для пользователя: {}", username);
-        validateUsername(username);
 
         List<Order> orders = orderRepository.findByUsernameOrderByCreatedAtDesc(username);
         return orders.stream()
@@ -48,17 +46,20 @@ public class OrderServiceImpl implements OrderService {
     public OrderDto createNewOrder(CreateNewOrderRequest request) {
         log.debug("Создание нового заказа из корзины: {}", request.getShoppingCart().getShoppingCartId());
 
-        BookedProductsDto booked = checkWarehouse(request.getShoppingCart());
 
         Order order = orderMapper.toEntity(request);
-        order.setDeliveryWeight(booked.getDeliveryWeight());
-        order.setDeliveryVolume(booked.getDeliveryVolume());
-        order.setFragile(booked.getFragile());
-
         Order savedOrder = orderRepository.save(order);
         log.debug("Заказ создан с id: {}", savedOrder.getId());
 
-        return orderMapper.toDto(savedOrder);
+        BookedProductsDto booked = AssemblyOrder(request.getShoppingCart(), savedOrder.getId());
+
+        savedOrder.setDeliveryWeight(booked.getDeliveryWeight());
+        savedOrder.setDeliveryVolume(booked.getDeliveryVolume());
+        savedOrder.setFragile(booked.getFragile());
+
+        Order assemledOrder = orderRepository.save(savedOrder);
+
+        return orderMapper.toDto(assemledOrder);
     }
 
     @Override
@@ -150,7 +151,6 @@ public class OrderServiceImpl implements OrderService {
 
         if (order.getState() != OrderState.ON_PAYMENT) {
             log.warn("Заказ {} не ожидает оплаты, текущий статус: {}", orderId, order.getState());
-//            throw new IllegalStateException("Заказ не ожидает оплаты");
         }
 
         order.setState(OrderState.PAYMENT_FAILED);
@@ -168,14 +168,10 @@ public class OrderServiceImpl implements OrderService {
 
         if (order.getState() != OrderState.ON_PAYMENT) {
             log.warn("Заказ {} не ожидает оплаты, текущий статус: {}", orderId, order.getState());
-//            throw new IllegalStateException("Заказ не ожидает оплаты");
         }
 
         order.setState(OrderState.PAID);
         Order savedOrder = orderRepository.save(order);
-
-        // раз оплата успешна, начинаем сборку заказа
-        startAssembly(savedOrder);
 
         return orderMapper.toDto(savedOrder);
     }
@@ -264,22 +260,19 @@ public class OrderServiceImpl implements OrderService {
     }
 
 
-
-    private void validateUsername(String username) {
-        if (username == null || username.isBlank()) {
-            throw new NotAuthorizedUserException("Имя пользователя не должно быть пустым");
-        }
-    }
-
     private Order findOrderById(UUID orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoOrderFoundException("Заказ с id " + orderId + " не найден"));
     }
 
-    private BookedProductsDto checkWarehouse(ShoppingCartDto shoppingCart) {
+    private BookedProductsDto AssemblyOrder(ShoppingCartDto shoppingCart, UUID orderID) {
         try {
-            BookedProductsDto booked = warehouseClient.checkProductQuantityEnoughForShoppingCart(shoppingCart);
-            log.debug("Проверка склада пройдена. Вес: {}, Объём: {}, Хрупкие: {}",
+            AssemblyProductsForOrderRequest assemblyRequest = AssemblyProductsForOrderRequest.builder()
+                    .products(shoppingCart.getProducts())
+                    .orderId(orderID)
+                    .build();
+            BookedProductsDto booked = warehouseClient.assemblyProductsForOrder(assemblyRequest);
+            log.debug("Заказ собран. Вес: {}, Объём: {}, Хрупкие: {}",
                     booked.getDeliveryWeight(), booked.getDeliveryVolume(), booked.getFragile());
             return booked;
         } catch (feign.FeignException e) {
@@ -292,28 +285,13 @@ public class OrderServiceImpl implements OrderService {
                 log.error("Сервис склада не найден: {}", e.getMessage());
                 throw new RuntimeException("Сервис склада временно недоступен");
             } else {
-                log.error("Ошибка при проверке склада: status={}, message={}", e.status(), e.getMessage());
+                log.error("Ошибка при сборке заказа: status={}, message={}", e.status(), e.getMessage());
                 throw new RuntimeException("Ошибка при проверке наличия товаров: " + e.getMessage());
             }
         } catch (Exception e) {
-            log.error("Неожиданная ошибка при проверке склада: {}", e.getMessage());
-            throw new RuntimeException("Невозможно проверить наличие товаров");
+            log.error("Неожиданная ошибка при сборке заказа: {}", e.getMessage());
+            throw new RuntimeException("Невозможно собрать заказ");
         }
     }
 
-    private void startAssembly(Order order) {
-        log.debug("Запуск сборки заказа: {}", order.getId());
-
-        AssemblyProductsForOrderRequest request = AssemblyProductsForOrderRequest.builder()
-                .orderId(order.getId())
-                .products(order.getProducts())
-                .build();
-
-        try {
-            warehouseClient.assemblyProductsForOrder(request);
-            log.debug("Сборка заказа {} инициирована", order.getId());
-        } catch (Exception e) {
-            log.error("Ошибка при инициации сборки заказа {}: {}", order.getId(), e.getMessage());
-        }
-    }
 }
