@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.dto.*;
 import ru.yandex.practicum.exceptions.exceptions.NoOrderFoundException;
-import ru.yandex.practicum.exceptions.exceptions.NotAuthorizedUserException;
 import ru.yandex.practicum.order.client.DeliveryClient;
 import ru.yandex.practicum.order.client.PaymentClient;
 import ru.yandex.practicum.order.client.WarehouseClient;
@@ -51,7 +50,7 @@ public class OrderServiceImpl implements OrderService {
         Order savedOrder = orderRepository.save(order);
         log.debug("Заказ создан с id: {}", savedOrder.getId());
 
-        BookedProductsDto booked = AssemblyOrder(request.getShoppingCart(), savedOrder.getId());
+        BookedProductsDto booked = assemblyOrder(request.getShoppingCart(), savedOrder.getId());
 
         savedOrder.setDeliveryWeight(booked.getDeliveryWeight());
         savedOrder.setDeliveryVolume(booked.getDeliveryVolume());
@@ -265,7 +264,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new NoOrderFoundException("Заказ с id " + orderId + " не найден"));
     }
 
-    private BookedProductsDto AssemblyOrder(ShoppingCartDto shoppingCart, UUID orderID) {
+    private BookedProductsDto assemblyOrder(ShoppingCartDto shoppingCart, UUID orderID) {
         try {
             AssemblyProductsForOrderRequest assemblyRequest = AssemblyProductsForOrderRequest.builder()
                     .products(shoppingCart.getProducts())
