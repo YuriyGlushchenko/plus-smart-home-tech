@@ -11,6 +11,9 @@ import ru.yandex.practicum.dto.*;
 import ru.yandex.practicum.validation.CheckCart;
 import ru.yandex.practicum.warehouse.service.WarehouseService;
 
+import java.util.Map;
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/v1/warehouse")
 @RequiredArgsConstructor
@@ -48,5 +51,27 @@ public class WarehouseController implements WarehouseApi {
     public AddressDto getWarehouseAddress() {
         log.debug("GET /api/v1/warehouse/address - Получение адреса склада");
         return warehouseService.getWarehouseAddress();
+    }
+
+    @Override
+    @PostMapping("/assembly")
+    public BookedProductsDto assemblyProductsForOrder(@Valid @RequestBody AssemblyProductsForOrderRequest request) {
+        log.debug("POST /api/v1/warehouse/assembly - Сборка заказа: {}", request.getOrderId());
+        return warehouseService.assemblyProductsForOrder(request);
+    }
+
+    @Override
+    @PostMapping("/shipped")
+    public void shippedToDelivery(@Valid @RequestBody ShippedToDeliveryRequest request) {
+        log.debug("POST /api/v1/warehouse/shipped - Передача товаров в доставку для заказа: {}",
+                request.getOrderId());
+        warehouseService.shippedToDelivery(request);
+    }
+
+    @Override
+    @PostMapping("/return")
+    public void acceptReturn(@RequestBody Map<UUID, Integer> products) {
+        log.debug("POST /api/v1/warehouse/return - Приём возврата товаров на склад");
+        warehouseService.acceptReturn(products);
     }
 }

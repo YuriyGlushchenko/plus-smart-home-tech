@@ -6,6 +6,8 @@ import ru.yandex.practicum.model.ProductCategory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface ProductService {
@@ -21,4 +23,6 @@ public interface ProductService {
     boolean removeProductFromStore(UUID productId);
 
     boolean setProductQuantityState(SetProductQuantityStateRequest request);
+
+    Map<UUID, Double> getProductsPrices(List<UUID> productIds);
 }

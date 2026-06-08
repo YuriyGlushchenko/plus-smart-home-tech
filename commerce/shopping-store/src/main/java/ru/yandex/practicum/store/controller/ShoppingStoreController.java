@@ -19,6 +19,8 @@ import ru.yandex.practicum.store.service.ProductService;
 import ru.yandex.practicum.validation.Create;
 import ru.yandex.practicum.validation.Update;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -89,6 +91,12 @@ public class ShoppingStoreController implements ShoppingStoreApi {
                 .build();
 
         return productService.setProductQuantityState(request);
+    }
+
+    @PostMapping("/products/prices")
+    public Map<UUID, Double> getProductsPrices(@RequestBody List<UUID> productIds) {
+        log.debug("POST /api/v1/shopping-store/products/prices - Получение цен для товаров: {}", productIds);
+        return productService.getProductsPrices(productIds);
     }
 
 }

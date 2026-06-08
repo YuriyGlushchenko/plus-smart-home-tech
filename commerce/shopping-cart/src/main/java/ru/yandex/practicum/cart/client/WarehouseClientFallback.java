@@ -4,6 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.dto.*;
 
+import java.util.Map;
+import java.util.UUID;
+
 @Component  // ← Обязательно! Spring должен создать бин
 @Slf4j
 public class WarehouseClientFallback implements WarehouseClient {
@@ -36,5 +39,20 @@ public class WarehouseClientFallback implements WarehouseClient {
     public AddressDto getWarehouseAddress() {
         log.warn("getWarehouseAddress - Сервис warehouse недоступен");
         throw new RuntimeException("Сервис склада временно недоступен");
+    }
+
+    @Override
+    public BookedProductsDto assemblyProductsForOrder(AssemblyProductsForOrderRequest request) {
+        return null;
+    }
+
+    @Override
+    public void shippedToDelivery(ShippedToDeliveryRequest request) {
+
+    }
+
+    @Override
+    public void acceptReturn(Map<UUID, Integer> products) {
+
     }
 }
